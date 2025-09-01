@@ -114,7 +114,7 @@ const translations = {
         
         // Formation - CUSTOMIZABLE
         'formation-1': 'Generalist Engineer, Centrale Lyon, 2024',
-        'formation-2': 'Diplôme de l\'ENS de Lyon, 2024',
+        'formation-2': 'ENS de Lyon Diploma, 2024',
         'formation-3': 'Master\'s in Computer Science, ENS de Lyon, 2024',
         
         // Expertise - CUSTOMIZABLE
