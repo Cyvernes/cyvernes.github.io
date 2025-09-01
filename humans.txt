@@ -1,0 +1,16 @@
+/* TEAM */
+Developer: Clément Yvernes
+
+/* SITE */
+Last update: 2025/09/01
+Language: English / Français
+Doctype: HTML5
+IDE: Visual Studio Code
+
+/* ACADEMIC */
+Field: Computer Science and Applied Mathematics
+Research: Causality, Causal Inference, Causal Abstractions
+Institution: Université Grenoble Alpes
+Status: PhD Student
+
+"Academic research is about pushing the boundaries of human knowledge, one publication at a time."

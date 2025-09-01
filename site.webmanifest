@@ -1,0 +1,21 @@
+{
+    "name": "Clément Yvernes - Academic Portfolio",
+    "short_name": "C. Yvernes",
+    "description": "Personal academic website of Clément Yvernes, PhD student in Causality",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1a365d",
+    "icons": [
+        {
+            "src": "/images/profile.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["education", "research", "academic"],
+    "lang": "en",
+    "scope": "/",
+    "orientation": "portrait-primary"
+}

@@ -1,0 +1,33 @@
+# Configuration pour GitHub Pages
+title: "Clément Yvernes - Academic Researcher"
+description: "Personal academic website of Clément Yvernes, PhD student in Causality at Université Grenoble Alpes"
+url: "https://cyvernes.github.io"
+baseurl: ""
+
+# Plugins GitHub Pages
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Exclusions
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - "*.md"
+
+# SEO
+lang: en
+author: "Clément Yvernes"
+
+# Academic site specific settings
+keywords: "causal inference, causality, machine learning, PhD, research, academic"
+academic_field: "Computer Science and Applied Mathematics"
+institution: "Université Grenoble Alpes"
+
