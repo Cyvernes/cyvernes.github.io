@@ -90,7 +90,7 @@ const conferences = [
         locationKey: "location-copenhagen",
         type: "attendance",
         description: {
-            fr: "Rencontre européenne sur l'inférence causale axée sur l'inférence causale dans les sciences de la santé, économiques et sociales.",
+            fr: "Conférence européenne axée sur l'inférence causale dans les sciences de la santé, économiques et sociales.",
             en: "European Causal Inference Meeting focused on causal inference in health, economic and social sciences."
         },
         website: "https://eurocim.org/copenhagen-2024/"
