@@ -385,7 +385,7 @@ function initializeConferences() {
 
     // Définir le filtre initial: utiliser le choix sauvegardé si valide
     const allowed = ['all','major','workshop','attendance','other'];
-    let defaultFilter = 'all';
+    let defaultFilter = 'major';
     try {
         const saved = localStorage.getItem('confFilter');
         if (allowed.includes(saved)) defaultFilter = saved;
@@ -393,6 +393,7 @@ function initializeConferences() {
 
     const hasItems = (f) => f === 'all' || ((grouped[f] || []).length > 0);
     if (!hasItems(defaultFilter)) {
+        // Choix sauvegardé mais vide dans ce contexte -> fallback intelligent
         defaultFilter = (grouped.major && grouped.major.length > 0) ? 'major' : 'all';
     }
     applyFilter(defaultFilter);
