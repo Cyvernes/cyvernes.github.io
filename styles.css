@@ -930,6 +930,62 @@ body {
     background: linear-gradient(135deg, var(--ai-green), var(--secondary-color));
 }
 
+/* Conference groups */
+.conf-group {
+  margin-bottom: 2.5rem;
+}
+
+.conf-group-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.4rem;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--divider, rgba(0,0,0,0.08));
+  padding-bottom: 0.4rem;
+}
+
+/* Slight variants by tier (optional) */
+.conf-group-major .conf-group-title {
+  border-color: var(--secondary-color);
+}
+.conf-group-workshop .conf-group-title {
+  border-color: var(--accent-color);
+}
+.conf-group-attendance .conf-group-title {
+  border-color: var(--muted, rgba(0,0,0,0.15));
+}
+
+/* Conference filters */
+.conf-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+    margin: 0 0 1rem 0;
+    justify-content: center;
+}
+.conf-filter-btn {
+  appearance: none;
+  border: 1px solid var(--border, rgba(0,0,0,.12));
+  background: var(--bg-white);
+  color: var(--text-color);
+  padding: .4rem .75rem;
+  border-radius: 999px;
+  font-size: .95rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.conf-filter-btn:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+.conf-filter-btn.active {
+  background: var(--accent-color);
+  color: var(--text-white);
+  border-color: var(--accent-color);
+}
+@media (max-width: 600px) {
+    /* already centered */
+}
+
 /* Responsive Design */
 @media (max-width: 968px) {
     .hero-content {

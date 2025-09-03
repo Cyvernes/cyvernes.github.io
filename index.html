@@ -33,8 +33,16 @@
     <link rel="stylesheet" href="styles.css">
     
     <script>
-    // Anti-flash universel - cache toujours pendant l'initialisation
+    // Anti-flash
     (function() {
+        // Définir la langue au plus tôt depuis localStorage pour éviter tout flash
+        try {
+            var earlyLang = localStorage.getItem('language');
+            if (earlyLang) {
+                document.documentElement.lang = earlyLang;
+            }
+        } catch (e) { /* ignore */ }
+
         // Cache systématiquement pendant le chargement initial
         const style = document.createElement('style');
         style.textContent = 'html { opacity: 0 !important; transition: opacity 0.1s ease-in-out; }';

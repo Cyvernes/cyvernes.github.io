@@ -26,6 +26,12 @@ const translations = {
         'conf-poster': 'Poster',
         'conf-attendance': 'Participation',
         'conf-event': 'Événement',
+    // Conference grouping
+    'conf-group-major': 'Conférences majeures',
+    'conf-group-workshops': 'Workshops & Séminaires',
+    'conf-group-attendance': 'Présence / Participation',
+    'conf-group-other': 'Exposés & Événements',
+    'conf-filter-all': 'Tous',
         
         // Conference contribution labels
         'contrib-main-poster': 'Poster conférence principale :',
@@ -92,6 +98,12 @@ const translations = {
         'conf-poster': 'Poster',
         'conf-attendance': 'Attendance',
         'conf-event': 'Event',
+    // Conference grouping
+    'conf-group-major': 'Major conferences',
+    'conf-group-workshops': 'Workshops & Seminars',
+    'conf-group-attendance': 'Attendance',
+    'conf-group-other': 'Talks & Events',
+    'conf-filter-all': 'All',
         
         // Conference contribution labels
         'contrib-main-poster': 'Main conference poster:',

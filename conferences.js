@@ -249,6 +249,42 @@ function getTypeLabel(type) {
     }
 }
 
+// Fonction utilitaire: calcul du tier (hiérarchie)
+function getConferenceTier(conf) {
+    // Priorité explicite si fournie
+    if (conf.tier) return conf.tier; // 'major' | 'workshop' | 'attendance' | 'other'
+
+    // Attendance explicite
+    if (conf.type === 'attendance') return 'attendance';
+
+    // Heuristique pour identifier les conférences majeures
+    const title = (conf.shortName || conf.title || '').toLowerCase();
+    const majorHints = ['uai', 'neurips', 'icml', 'iclr', 'aistats', 'aaai', 'kdd', 'colt'];
+    if (majorHints.some(k => title.includes(k))) return 'major';
+
+    // Présentations/posters non-majeurs => workshops/séminaires
+    if (conf.type === 'presentation' || conf.type === 'poster') return 'workshop';
+
+    return 'other';
+}
+
+// Fonction utilitaire: libellé traduit du groupe
+function getGroupLabel(tier) {
+    const translations = window.translations || {};
+    const currentLang = document.documentElement.lang || 'fr';
+    const t = translations[currentLang] || {};
+    switch (tier) {
+        case 'major':
+            return t['conf-group-major'] || 'Conférences majeures';
+        case 'workshop':
+            return t['conf-group-workshops'] || 'Workshops & Séminaires';
+        case 'attendance':
+            return t['conf-group-attendance'] || 'Présence / Participation';
+        default:
+            return t['conf-group-other'] || 'Autres événements';
+    }
+}
+
 // Fonction pour initialiser les conférences sur la page
 function initializeConferences() {
     const conferencesContainer = document.getElementById('conferences-container');
@@ -263,26 +299,103 @@ function initializeConferences() {
         return 3; // autres types
     };
 
-    // Trier par année (desc), puis par priorité (présentation > poster > attendance), puis par shortName/titre
-    const sortedConferences = conferences.slice().sort((a, b) => {
+    // Construire des groupes par tier
+    const groupsOrder = ['major', 'workshop', 'attendance', 'other'];
+    const grouped = {
+        major: [],
+        workshop: [],
+        attendance: [],
+        other: []
+    };
+
+    conferences.forEach(conf => {
+        const tier = getConferenceTier(conf);
+        grouped[tier] = grouped[tier] || [];
+        grouped[tier].push(conf);
+    });
+
+    // Fonction de tri interne à l'intérieur d'un groupe
+    const sortWithinGroup = (arr) => arr.slice().sort((a, b) => {
         if (b.year !== a.year) return b.year - a.year;
-        
         const aPriority = getDisplayPriority(a);
         const bPriority = getDisplayPriority(b);
         if (aPriority !== bPriority) return aPriority - bPriority;
-        
-        const aKey = (a.shortName || (window.i18n ? window.i18n.t(a.title) : a.title) || '').toLowerCase();
-        const bKey = (b.shortName || (window.i18n ? window.i18n.t(b.title) : b.title) || '').toLowerCase();
+        const aKey = (a.shortName || a.title || '').toLowerCase();
+        const bKey = (b.shortName || b.title || '').toLowerCase();
         return aKey.localeCompare(bKey);
     });
 
-    // Générer le HTML des conférences
-    let conferencesHTML = '';
-    sortedConferences.forEach(conf => {
-        conferencesHTML += generateConferenceHTML(conf);
+    // Traductions
+    const translations = window.translations || {};
+    const currentLang = document.documentElement.lang || 'fr';
+    const t = (key, fallback) => (translations[currentLang] && translations[currentLang][key]) || fallback;
+
+        // Barre de filtres (Major d'abord, All en dernier)
+        let html = `
+            <div class="conf-filters" role="toolbar" aria-label="${t('conferences-title','Conférences')} filters">
+            <button class="conf-filter-btn" data-filter="major" aria-pressed="false">${getGroupLabel('major')}</button>
+                <button class="conf-filter-btn" data-filter="workshop" aria-pressed="false">${getGroupLabel('workshop')}</button>
+                <button class="conf-filter-btn" data-filter="attendance" aria-pressed="false">${getGroupLabel('attendance')}</button>
+                <button class="conf-filter-btn" data-filter="other" aria-pressed="false">${getGroupLabel('other')}</button>
+            <button class="conf-filter-btn" data-filter="all" aria-pressed="false">${t('conf-filter-all','Tous')}</button>
+            </div>
+        `;
+
+    // Générer le HTML avec sous-titres de groupe
+    groupsOrder.forEach(tier => {
+        const items = grouped[tier] || [];
+        if (!items.length) return;
+        html += `
+            <div class="conf-group conf-group-${tier}" data-tier="${tier}">
+                <h3 class="conf-group-title">${getGroupLabel(tier)}</h3>
+        `;
+        sortWithinGroup(items).forEach(conf => {
+            html += generateConferenceHTML(conf);
+        });
+        html += `</div>`;
     });
 
-    conferencesContainer.innerHTML = conferencesHTML;
+    conferencesContainer.innerHTML = html;
+
+    // Interaction filtres
+    const buttons = conferencesContainer.querySelectorAll('.conf-filter-btn');
+    const groups = conferencesContainer.querySelectorAll('.conf-group');
+
+    // Fonction d'application de filtre (réutilisable)
+    const applyFilter = (filter) => {
+        buttons.forEach(b => {
+            const isActive = b.getAttribute('data-filter') === filter;
+            b.classList.toggle('active', isActive);
+            b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+        groups.forEach(group => {
+            const tier = group.getAttribute('data-tier');
+            group.style.display = (filter === 'all' || filter === tier) ? '' : 'none';
+        });
+    };
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filter = btn.getAttribute('data-filter');
+            applyFilter(filter);
+            // Sauvegarder le choix utilisateur
+            try { localStorage.setItem('confFilter', filter); } catch(e) {}
+        });
+    });
+
+    // Définir le filtre initial: utiliser le choix sauvegardé si valide
+    const allowed = ['all','major','workshop','attendance','other'];
+    let defaultFilter = 'all';
+    try {
+        const saved = localStorage.getItem('confFilter');
+        if (allowed.includes(saved)) defaultFilter = saved;
+    } catch (e) {}
+
+    const hasItems = (f) => f === 'all' || ((grouped[f] || []).length > 0);
+    if (!hasItems(defaultFilter)) {
+        defaultFilter = (grouped.major && grouped.major.length > 0) ? 'major' : 'all';
+    }
+    applyFilter(defaultFilter);
 }
 
 // Initialisation centralisée via translatePage() dans script.js
