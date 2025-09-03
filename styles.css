@@ -629,7 +629,7 @@ body {
 }
 
 .course-item[data-category="summer"] {
-    border-top-color: var(--accent-color); /* Summer School - Orange */
+    border-top-color: var(--accent-color); /* Licence - Vert */
 }
 
 .course-item:hover {

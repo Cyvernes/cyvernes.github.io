@@ -49,14 +49,14 @@ const courses = [
             en: "Introduction to Causality"
         },
         level: {
-            fr: "Summer School",
-            en: "Summer School"
+            fr: "Licence 3",
+            en: "Bachelor 3"
         },
         description: {
             fr: "Summer School of Artificial Intelligence, Grenoble INP - Ensimag",
             en: "Summer School of Artificial Intelligence, Grenoble INP - Ensimag"
         },
-        category: "summer",
+    category: "bachelor",
         years: [2025],
         institution: {
             fr: "Grenoble INP - Ensimag",
