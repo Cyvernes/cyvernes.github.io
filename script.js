@@ -27,7 +27,7 @@ const translations = {
         'conf-attendance': 'Participation',
         'conf-event': 'Événement',
     // Conference grouping
-    'conf-group-major': 'Conférences majeures',
+    'conf-group-major': 'Conférences internationales',
     'conf-group-workshops': 'Workshops & Séminaires',
     'conf-group-attendance': 'Présence / Participation',
     'conf-group-other': 'Exposés & Événements',
@@ -99,7 +99,7 @@ const translations = {
         'conf-attendance': 'Attendance',
         'conf-event': 'Event',
     // Conference grouping
-    'conf-group-major': 'Major conferences',
+    'conf-group-major': 'International conferences',
     'conf-group-workshops': 'Workshops & Seminars',
     'conf-group-attendance': 'Attendance',
     'conf-group-other': 'Talks & Events',

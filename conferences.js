@@ -275,7 +275,7 @@ function getGroupLabel(tier) {
     const t = translations[currentLang] || {};
     switch (tier) {
         case 'major':
-            return t['conf-group-major'] || 'Conférences majeures';
+            return t['conf-group-major'] || 'Conférences internationales';
         case 'workshop':
             return t['conf-group-workshops'] || 'Workshops & Séminaires';
         case 'attendance':
