@@ -17,6 +17,7 @@ const conferences = [
                 type: "main_poster",
                 labelKey: "contrib-main-poster",
                 title: "Complete Characterization for Adjustment in Summary Causal Graphs of Time Series",
+                posterUrl: "posters/Poster_UAI2025.pdf",
                 abstract: {
                     fr: "Poster présenté à la conférence principale : Critères d\'ajustement pour les summary causal graphs",
                     en: "Main conference poster on adjustment criteria for Summary Causal Graphs."
@@ -26,6 +27,7 @@ const conferences = [
                 type: "workshop_poster",
                 labelKey: "contrib-workshop-poster",
                 title: "Identifiability in Causal Abstractions: A Hierarchy of Criteria",
+                posterUrl: "posters/Poster_Workshop_UAI2025.pdf",
                 abstract: {
                     fr: "Poster du workshop CAR explorant différentes notions d'identifiabilité dans les abstractions causales.",
                     en: "CAR Workshop poster exploring different notions of identifiability in causal abstractions."
@@ -123,6 +125,16 @@ function generateConferenceHTML(conf) {
                 abstractText = contrib.abstract || '';
             }
             
+            // Lien vers poster si fourni
+            let posterLinkHTML = '';
+            if (contrib.posterUrl) {
+                const translations = window.translations || {};
+                const currentLang = document.documentElement.lang || 'fr';
+                const langTranslations = translations[currentLang] || {};
+                const viewPosterLabel = langTranslations['view-poster'] || (currentLang === 'en' ? 'View poster' : 'Voir le poster');
+                    posterLinkHTML = `<a href="${contrib.posterUrl}" target="_blank" rel="noopener noreferrer" class="conf-link"><i class="fas fa-file-pdf"></i> ${viewPosterLabel}</a>`;
+            }
+
             presentationHTML += `
                 <ul class="conf-activities">
                     <li>${translatedLabel}</li>
@@ -130,6 +142,7 @@ function generateConferenceHTML(conf) {
                 <div class="presentation-details">
                     <h4><i class="fas fa-presentation-screen"></i> ${contrib.title}</h4>
                     ${abstractText ? `<p class="presentation-abstract">${abstractText}</p>` : ''}
+                    ${posterLinkHTML}
                 </div>
             `;
         });

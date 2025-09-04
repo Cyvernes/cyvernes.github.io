@@ -38,6 +38,7 @@ const translations = {
         'contrib-workshop-poster': 'Poster workshop :',
         'contrib-oral-presentation': 'Présentation orale :',
         'contrib-short-talk': 'Présentation courte (20 min) :',
+    'view-poster': 'Voir le poster',
         
         // Locations
         'location-rio': 'Rio de Janeiro, Brésil',
@@ -110,6 +111,7 @@ const translations = {
         'contrib-workshop-poster': 'Workshop poster:',
         'contrib-oral-presentation': 'Oral presentation:',
         'contrib-short-talk': 'Short talk (20 min):',
+    'view-poster': 'View poster',
         
         // Locations
         'location-rio': 'Rio de Janeiro, Brazil',
