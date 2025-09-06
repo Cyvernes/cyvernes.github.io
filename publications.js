@@ -11,7 +11,7 @@ const publications = [
         links: {
             pdf: "https://arxiv.org/pdf/2506.14534",
             arxiv: "https://arxiv.org/abs/2506.14534",
-            hal: null, // Pas encore disponible sur HAL
+            hal: "https://hal.science/hal-5243540", 
             doi: null // Sera ajouté plus tard
         },
         bibtex: {
