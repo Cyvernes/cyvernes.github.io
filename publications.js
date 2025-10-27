@@ -5,19 +5,33 @@ const publications = [
         title: "Complete Characterization for Adjustment in Summary Causal Graphs of Time Series",
         authors: ["Clément Yvernes", "Emilie Devijver", "Eric Gaussier"],
         year: 2025,
-        venue: "41st Conference on Uncertainty in Artificial Intelligence (UAI2025)",
+        venue: "Proceedings of the Forty-first Conference on Uncertainty in Artificial Intelligence",
         type: "conference", // "conference", "workshop", "journal", "preprint"
         arxivId: "2506.14534",
+        pmlr: "v286/yvernes25a",
+        pages: "4844--4871",
+        volume: "286",
+        series: "Proceedings of Machine Learning Research",
+        publisher: "PMLR",
         links: {
-            pdf: "https://arxiv.org/pdf/2506.14534",
+            pdf: "https://raw.githubusercontent.com/mlresearch/v286/main/assets/yvernes25a/yvernes25a.pdf",
             arxiv: "https://arxiv.org/abs/2506.14534",
-            hal: "https://hal.science/hal-05243540", 
-            doi: null // Sera ajouté plus tard
+            hal: "https://hal.science/hal-05243540",
+            pmlr: "https://proceedings.mlr.press/v286/yvernes25a.html",
+            openreview: "https://openreview.net/forum?id=XikeoYEFfo",
+            software: "https://gricad-gitlab.univ-grenoble-alpes.fr/yvernesc/multivariateicainscg",
+            doi: null
         },
         bibtex: {
             type: "inproceedings",
-            key: "yvernes2025complete",
-            booktitle: "Proceedings of the 41st Conference on Uncertainty in Artificial Intelligence (UAI)",
+            key: "pmlr-v286-yvernes25a",
+            booktitle: "Proceedings of the Forty-first Conference on Uncertainty in Artificial Intelligence",
+            pages: "4844--4871",
+            volume: "286",
+            series: "Proceedings of Machine Learning Research",
+            publisher: "PMLR",
+            editors: ["Silvia Chiappa", "Sara Magliacane"],
+            month: "21--25 Jul",
             note: null
         }
     },
@@ -60,6 +74,18 @@ function generatePublicationHTML(pub, index) {
         linksHTML += `<a href="${pub.links.hal}" target="_blank" class="pub-link"><i class="fas fa-graduation-cap"></i> HAL</a>`;
     }
     
+    if (pub.links.pmlr) {
+        linksHTML += `<a href="${pub.links.pmlr}" target="_blank" class="pub-link"><i class="fas fa-book"></i> PMLR</a>`;
+    }
+    
+    if (pub.links.openreview) {
+        linksHTML += `<a href="${pub.links.openreview}" target="_blank" class="pub-link"><i class="fas fa-comments"></i> OpenReview</a>`;
+    }
+    
+    if (pub.links.software) {
+        linksHTML += `<a href="${pub.links.software}" target="_blank" class="pub-link"><i class="fas fa-code"></i> Code</a>`;
+    }
+    
     linksHTML += `<a href="#" class="pub-link citation-link" data-modal="citation-modal-${index}"><i class="fas fa-quote-right"></i> Citation</a>`;
     
     if (pub.links.doi) {
@@ -93,11 +119,44 @@ function generateBibTeX(pub) {
 
     if (pub.bibtex.type === "inproceedings") {
         bibtex += `\n  booktitle={${pub.bibtex.booktitle}},`;
+        
+        if (pub.bibtex.pages) {
+            bibtex += `\n  pages={${pub.bibtex.pages}},`;
+        }
     } else if (pub.bibtex.type === "article") {
         bibtex += `\n  journal={${pub.venue}},`;
     }
 
     bibtex += `\n  year={${pub.year}}`;
+    
+    if (pub.bibtex.editors) {
+        const editors = pub.bibtex.editors.join(" and ");
+        bibtex += `,\n  editor={${editors}}`;
+    }
+    
+    if (pub.bibtex.volume) {
+        bibtex += `,\n  volume={${pub.bibtex.volume}}`;
+    }
+    
+    if (pub.bibtex.series) {
+        bibtex += `,\n  series={${pub.bibtex.series}}`;
+    }
+    
+    if (pub.bibtex.month) {
+        bibtex += `,\n  month={${pub.bibtex.month}}`;
+    }
+    
+    if (pub.bibtex.publisher) {
+        bibtex += `,\n  publisher={${pub.bibtex.publisher}}`;
+    }
+    
+    if (pub.links.pmlr) {
+        bibtex += `,\n  url={${pub.links.pmlr}}`;
+    }
+    
+    if (pub.links.pdf && pub.pmlr) {
+        bibtex += `,\n  pdf={${pub.links.pdf}}`;
+    }
 
     if (pub.bibtex.note) {
         bibtex += `,\n  note={${pub.bibtex.note}}`;
@@ -118,14 +177,29 @@ function generateAPA(pub) {
 
     let apa = `${authors} (${pub.year}). ${pub.title}.`;
     
-    if (pub.bibtex.type === "inproceedings") {
-        apa += ` In ${pub.bibtex.booktitle}.`;
-    } else {
-        apa += ` ${pub.venue}.`;
+    // Format spécifique PMLR
+    if (pub.pmlr) {
+        apa += ` ${pub.bibtex.booktitle}, in ${pub.series}`;
+        if (pub.volume && pub.pages) {
+            apa += ` ${pub.volume}:${pub.pages}`;
+        }
+        if (pub.links.pmlr) {
+            apa += ` Available from ${pub.links.pmlr}.`;
+        }
     }
-
-    if (pub.arxivId) {
-        apa += ` arXiv:${pub.arxivId}.`;
+    // Format général pour les proceedings
+    else if (pub.bibtex.type === "inproceedings") {
+        apa += ` In ${pub.bibtex.booktitle}.`;
+        if (pub.arxivId) {
+            apa += ` arXiv:${pub.arxivId}.`;
+        }
+    } 
+    // Format pour les autres types
+    else {
+        apa += ` ${pub.venue}.`;
+        if (pub.arxivId) {
+            apa += ` arXiv:${pub.arxivId}.`;
+        }
     }
 
     return apa;
@@ -135,26 +209,35 @@ function generateAPA(pub) {
 function generateCitationModal(pub, index) {
     const bibtex = generateBibTeX(pub);
     const apa = generateAPA(pub);
+    
+    // Récupérer la langue courante du document
+    const currentLang = document.documentElement.lang || 'en';
+    
+    // Définir les textes en fonction de la langue
+    const texts = {
+        citation: currentLang === 'fr' ? 'Citation' : 'Citation',
+        copyBibtex: currentLang === 'fr' ? 'Copier BibTeX' : 'Copy BibTeX',
+        copyApa: currentLang === 'fr' ? 'Copier APA' : 'Copy APA'
+    };
 
     return `
         <div id="citation-modal-${index}" class="citation-modal">
             <div class="modal-content">
                 <span class="close">&times;</span>
-                <h3>Citation</h3>
+                <h3>${texts.citation}</h3>
                 <div class="citation-text">
                     <p><strong>BibTeX:</strong></p>
                     <textarea readonly id="bibtex-${index}">${bibtex}</textarea>
-                    <button onclick="copyToClipboard('bibtex-${index}')" class="copy-btn">Copier BibTeX</button>
+                    <button onclick="copyToClipboard('bibtex-${index}')" class="copy-btn">${texts.copyBibtex}</button>
                     
                     <p><strong>APA:</strong></p>
                     <textarea readonly id="apa-${index}">${apa}</textarea>
-                    <button onclick="copyToClipboard('apa-${index}')" class="copy-btn">Copier APA</button>
+                    <button onclick="copyToClipboard('apa-${index}')" class="copy-btn">${texts.copyApa}</button>
                 </div>
             </div>
         </div>
     `;
 }
-
 // Fonction pour initialiser les publications sur la page
 function initializePublications() {
     const publicationsContainer = document.getElementById('publications-container');
