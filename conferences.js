@@ -36,6 +36,31 @@ const conferences = [
         ]
     },
     {
+        id: "neurips2025_sandiego",
+        title: "The Thirty-Ninth Annual Conference on Neural Information Processing Systems",
+        shortName: "NeurIPS 2025",
+        year: 2025,
+        locationKey: "location-neurips2025",
+        type: "poster",
+        description: {
+            fr: "NeurIPS (Conference on Neural Information Processing Systems) — l'une des conférences les plus prestigieuses en intelligence artificielle et apprentissage automatique.",
+            en: "Conference on Neural Information Processing Systems - one of the most prestigious conferences in artificial intelligence and machine learning."
+        },
+        website: "https://neurips.cc/Conferences/2025",
+        contributions: [
+            {
+                type: "main_poster",
+                labelKey: "contrib-main-poster",
+                title: "Relaxing partition admissibility in Cluster-DAGs: a causal calculus with arbitrary variable clustering",
+                posterUrl: "posters/Poster_NeurIPS2025.pdf",
+                abstract: {
+                    fr: "Poster présenté à la conférence principale : Extension du framework C-DAG pour supporter les clusterings arbitraires en relaxant la contrainte d'admissibilité des partitions.",
+                    en: "Main conference poster on extending the C-DAG framework to support arbitrary variable clusterings by relaxing the partition admissibility constraint."
+                }
+            }
+        ]
+    },
+    {
         id: "clear2025_lausanne",
         title: "CLEAR 2025",
         shortName: "CLEAR 2025",

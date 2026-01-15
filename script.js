@@ -42,6 +42,7 @@ const translations = {
         
         // Locations
         'location-rio': 'Rio de Janeiro, Brésil',
+        'location-neurips2025': 'San Diego, États-Unis & Mexico, Mexique',
         'location-lausanne': 'Lausanne, Suisse',
         'location-paris': 'Paris, France',
         'location-barcelona': 'Barcelone, Espagne',
@@ -115,6 +116,7 @@ const translations = {
         
         // Locations
         'location-rio': 'Rio de Janeiro, Brazil',
+        'location-neurips2025': 'San Diego, USA & Mexico City, Mexico',
         'location-lausanne': 'Lausanne, Switzerland',
         'location-paris': 'Paris, France',
         'location-barcelona': 'Barcelona, Spain',
