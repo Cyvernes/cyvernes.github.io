@@ -62,6 +62,28 @@ const courses = [
             fr: "Grenoble INP - Ensimag",
             en: "Grenoble INP - Ensimag"
         }
+    },
+    {
+        id: "learning_prob_causalities",
+        title: {
+            fr: "Learning, Probabilites and Causalities",
+            en: "Learning, Probabilites and Causalities"
+        },
+        level: {
+            fr: "Master 2",
+            en: "Master 2"
+        },
+        description: {
+            fr: "Lab sur le paradoxe de Simpson",
+            en: "Lab on Simpson's paradox"
+        },
+        category: "master",
+        years: [2025],
+        institution: {
+            fr: "Grenoble INP - Ensimag",
+            en: "Grenoble INP - Ensimag"
+        },
+        website: "https://ensimag.grenoble-inp.fr/fr/formation/learning-probabilites-and-causalities-wmm9am77"
     }
 ];
 
