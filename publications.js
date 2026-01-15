@@ -1,6 +1,36 @@
 // Liste des publications - Il suffit d'ajouter ici pour ajouter une nouvelle publication
 const publications = [
     {
+        id: "yvernes2025relaxing",
+        title: "Relaxing partition admissibility in Cluster-DAGs: a causal calculus with arbitrary variable clustering",
+        authors: ["Clément Yvernes", "Emilie Devijver", "Adèle H. Ribeiro", "Marianne Clausel", "Eric Gaussier"],
+        year: 2025,
+        venue: "The Thirty-ninth Annual Conference on Neural Information Processing Systems (NeurIPS 2025)",
+        type: "conference",
+        arxivId: "2511.01396",
+        links: {
+            pdf: "https://arxiv.org/pdf/2511.01396",
+            arxiv: "https://arxiv.org/abs/2511.01396",
+            openreview: "https://openreview.net/forum?id=pyDAihUMKV",
+            hal: null,
+            pmlr: null,
+            software: null,
+            doi: null
+        },
+        bibtex: {
+            type: "inproceedings",
+            key: "yvernes2025relaxing",
+            booktitle: "The Thirty-ninth Annual Conference on Neural Information Processing Systems (NeurIPS 2025)",
+            pages: null,
+            volume: null,
+            series: null,
+            publisher: null,
+            editors: null,
+            month: null,
+            note: "arXiv:2511.01396"
+        }
+    },
+    {
         id: "yvernes2025complete",
         title: "Complete Characterization for Adjustment in Summary Causal Graphs of Time Series",
         authors: ["Clément Yvernes", "Emilie Devijver", "Eric Gaussier"],
