@@ -52,7 +52,7 @@ const conferences = [
                 type: "main_poster",
                 labelKey: "contrib-main-poster",
                 title: "Relaxing partition admissibility in Cluster-DAGs: a causal calculus with arbitrary variable clustering",
-                posterUrl: "posters/Poster_NeurIPS2025.pdf",
+                posterUrl: "posters/poster_NeurIPS2025.pdf",
                 abstract: {
                     fr: "Poster présenté à la conférence principale : Extension du framework C-DAG pour supporter les clusterings arbitraires en relaxant la contrainte d'admissibilité des partitions.",
                     en: "Main conference poster on extending the C-DAG framework to support arbitrary variable clusterings by relaxing the partition admissibility constraint."
