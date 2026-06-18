@@ -5,29 +5,29 @@ const publications = [
         title: "Relaxing partition admissibility in Cluster-DAGs: a causal calculus with arbitrary variable clustering",
         authors: ["Clément Yvernes", "Emilie Devijver", "Adèle H. Ribeiro", "Marianne Clausel", "Eric Gaussier"],
         year: 2025,
-        venue: "The Thirty-ninth Annual Conference on Neural Information Processing Systems (NeurIPS 2025)",
+        venue: "Thirty-ninth Annual Conference on Neural Information Processing Systems (NeurIPS 2025)",
         type: "conference",
         arxivId: "2511.01396",
         links: {
             pdf: "https://arxiv.org/pdf/2511.01396",
             arxiv: "https://arxiv.org/abs/2511.01396",
             openreview: "https://openreview.net/forum?id=pyDAihUMKV",
-            hal: null,
-            pmlr: null,
+            hal: "https://hal.science/hal-05340741",
+            proceedings: "https://proceedings.neurips.cc/paper_files/paper/2025/hash/69078488008b859a347ed36bc6531453-Abstract-Conference.html",
             software: null,
             doi: null
         },
         bibtex: {
             type: "inproceedings",
             key: "yvernes2025relaxing",
-            booktitle: "The Thirty-ninth Annual Conference on Neural Information Processing Systems (NeurIPS 2025)",
-            pages: null,
-            volume: null,
+            booktitle: "Advances in Neural Information Processing Systems",
+            pages: "72492--72525",
+            volume: "38",
             series: null,
-            publisher: null,
-            editors: null,
+            publisher: "Curran Associates, Inc.",
+            editors: ["D. Belgrave", "C. Zhang", "H. Lin", "R. Pascanu", "P. Koniusz", "M. Ghassemi", "N. Chen"],
             month: null,
-            note: "arXiv:2511.01396"
+            note: null
         }
     },
     {
@@ -35,10 +35,10 @@ const publications = [
         title: "Complete Characterization for Adjustment in Summary Causal Graphs of Time Series",
         authors: ["Clément Yvernes", "Emilie Devijver", "Eric Gaussier"],
         year: 2025,
-        venue: "Proceedings of the Forty-first Conference on Uncertainty in Artificial Intelligence",
+        venue: "Forty-first Conference on Uncertainty in Artificial Intelligence (UAI 2025)",
         type: "conference", // "conference", "workshop", "journal", "preprint"
         arxivId: "2506.14534",
-        pmlr: "v286/yvernes25a",
+        proceedings: "v286/yvernes25a",
         pages: "4844--4871",
         volume: "286",
         series: "Proceedings of Machine Learning Research",
@@ -47,14 +47,14 @@ const publications = [
             pdf: "https://raw.githubusercontent.com/mlresearch/v286/main/assets/yvernes25a/yvernes25a.pdf",
             arxiv: "https://arxiv.org/abs/2506.14534",
             hal: "https://hal.science/hal-05243540",
-            pmlr: "https://proceedings.mlr.press/v286/yvernes25a.html",
+            proceedings: "https://proceedings.mlr.press/v286/yvernes25a.html",
             openreview: "https://openreview.net/forum?id=XikeoYEFfo",
             software: "https://gricad-gitlab.univ-grenoble-alpes.fr/yvernesc/multivariateicainscg",
             doi: null
         },
         bibtex: {
             type: "inproceedings",
-            key: "pmlr-v286-yvernes25a",
+            key: "proceedings-v286-yvernes25a",
             booktitle: "Proceedings of the Forty-first Conference on Uncertainty in Artificial Intelligence",
             pages: "4844--4871",
             volume: "286",
@@ -85,6 +85,28 @@ const publications = [
             booktitle: "CAR Workshop at the 41st Conference on Uncertainty in Artificial Intelligence (UAI)",
             note: "arXiv:2507.06213"
         }
+    },
+    {
+        id: "yvernes2026unveiling",
+        title: "Unveiling the Structure of Do-Calculus Reasoning via Derivation Graphs",
+        authors: ["Clément Yvernes", "Emilie Devijver", "Marianne Clausel", "Eric Gaussier"],
+        year: 2026,
+        venue: "Forty-Third International Conference on Machine Learning (ICML 2026)",
+        type: "conference",
+        arxivId: "2606.03719",
+        links: {
+            pdf: "https://arxiv.org/pdf/2606.03719",
+            arxiv: "https://arxiv.org/abs/2606.03719",
+            hal: null,
+            doi: null,
+            software: "https://gricad-gitlab.univ-grenoble-alpes.fr/yvernesc/do-calculus-derivation-graphs"
+        },
+        bibtex: {
+            type: "inproceedings",
+            key: "yvernes2026unveiling",
+            booktitle: "Proceedings of the 43rd International Conference on Machine Learning (ICML)",
+            note: "arXiv:2606.03719"
+        }
     }
 ];
 
@@ -104,8 +126,8 @@ function generatePublicationHTML(pub, index) {
         linksHTML += `<a href="${pub.links.hal}" target="_blank" class="pub-link"><i class="fas fa-graduation-cap"></i> HAL</a>`;
     }
     
-    if (pub.links.pmlr) {
-        linksHTML += `<a href="${pub.links.pmlr}" target="_blank" class="pub-link"><i class="fas fa-book"></i> PMLR</a>`;
+    if (pub.links.proceedings) {
+        linksHTML += `<a href="${pub.links.proceedings}" target="_blank" class="pub-link"><i class="fas fa-book"></i> Proceedings</a>`;
     }
     
     if (pub.links.openreview) {
@@ -180,11 +202,11 @@ function generateBibTeX(pub) {
         bibtex += `,\n  publisher={${pub.bibtex.publisher}}`;
     }
     
-    if (pub.links.pmlr) {
-        bibtex += `,\n  url={${pub.links.pmlr}}`;
+    if (pub.links.proceedings) {
+        bibtex += `,\n  url={${pub.links.proceedings}}`;
     }
     
-    if (pub.links.pdf && pub.pmlr) {
+    if (pub.links.pdf && pub.proceedings) {
         bibtex += `,\n  pdf={${pub.links.pdf}}`;
     }
 
@@ -207,14 +229,14 @@ function generateAPA(pub) {
 
     let apa = `${authors} (${pub.year}). ${pub.title}.`;
     
-    // Format spécifique PMLR
-    if (pub.pmlr) {
+    // Format spécifique PROCEEDINGS
+    if (pub.proceedings) {
         apa += ` ${pub.bibtex.booktitle}, in ${pub.series}`;
         if (pub.volume && pub.pages) {
             apa += ` ${pub.volume}:${pub.pages}`;
         }
-        if (pub.links.pmlr) {
-            apa += ` Available from ${pub.links.pmlr}.`;
+        if (pub.links.proceedings) {
+            apa += ` Available from ${pub.links.proceedings}.`;
         }
     }
     // Format général pour les proceedings
@@ -275,11 +297,13 @@ function initializePublications() {
     
     if (!publicationsContainer || !modalsContainer) return;
 
-    // Générer le HTML des publications
+    // Tri par année décroissante
+    const sortedPublications = [...publications].sort((a, b) => {return (b.year ?? -Infinity) - (a.year ?? -Infinity);});
+
     let publicationsHTML = '';
     let modalsHTML = '';
 
-    publications.forEach((pub, index) => {
+    sortedPublications.forEach((pub, index) => {
         publicationsHTML += generatePublicationHTML(pub, index);
         modalsHTML += generateCitationModal(pub, index);
     });
