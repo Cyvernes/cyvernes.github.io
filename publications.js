@@ -97,6 +97,7 @@ const publications = [
         links: {
             pdf: "https://arxiv.org/pdf/2606.03719",
             arxiv: "https://arxiv.org/abs/2606.03719",
+            openreview: "https://openreview.net/forum?id=KUBkuPwGf4",
             hal: null,
             doi: null,
             software: "https://gricad-gitlab.univ-grenoble-alpes.fr/yvernesc/do-calculus-derivation-graphs"
