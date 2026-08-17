@@ -62,7 +62,7 @@ const translations = {
         // Expertise - CUSTOMIZABLE
         'expertise-1': 'Causalité',
         'expertise-2': 'Inférence causale',
-        'expertise-3': 'Abstraction causale',
+        'expertise-3': 'Abstractions causales',
         
         // Responsibilities - CUSTOMIZABLE  
     'resp-1-title': 'Gestion du site de l\'équipe',
@@ -136,7 +136,7 @@ const translations = {
         // Expertise - CUSTOMIZABLE
         'expertise-1': 'Causality',
         'expertise-2': 'Causal Inference',
-        'expertise-3': 'Causal Abstraction',
+        'expertise-3': 'Causal Abstractions',
         
         // Research section - CUSTOMIZABLE
         'research-learn-more': 'Learn more',
