@@ -20,7 +20,9 @@
             results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;
         }
         const model = window.CausalTablet;
-        const source = await fetch('../code_arduino.ino').then(response => {
+        const uiOnly = new URLSearchParams(location.search).has('ui-only');
+        if (uiOnly) messages.push('SKIP Comparaisons Arduino (mode ui-only).');
+        const source = uiOnly ? null : await fetch('../code_arduino.ino').then(response => {
             assert(response.ok, 'Le code Arduino doit être disponible pour la comparaison.');
             return response.text();
         });
@@ -29,9 +31,9 @@
             assert(match, `Tableau Arduino absent : ${name}`);
             return match[1].replace(/\/\/[^\r\n]*/g, '').split(',').map(value => value.trim()).filter(Boolean).map(Number);
         }
-        const data = readArray('graphData');
-        const index = readArray('graphIndex');
-        const parents = index.map(start => data.slice(start + 1, start + 1 + data[start]));
+        const data = source ? readArray('graphData') : null;
+        const index = source ? readArray('graphIndex') : model.parents.map((_, id) => id);
+        const parents = source ? index.map(start => data.slice(start + 1, start + 1 + data[start])) : model.parents;
         const order = [];
         const remaining = new Set(index.map((_, id) => id));
         while (remaining.size) {
@@ -39,20 +41,20 @@
             assert(ready.length, 'Cycle dans le code Arduino.');
             ready.forEach(id => { order.push(id); remaining.delete(id); });
         }
-        await test('Les données reproduisent exactement les tableaux Arduino', () => {
+        if (source) await test('Les données reproduisent exactement les tableaux Arduino', () => {
             assert(JSON.stringify(parents) === JSON.stringify(model.parents), 'Parents différents.');
             assert(/buttonDefaultStates[^=]*=\s*\{\s*(?:false[\s,]*){15}\}/.test(source), 'Valeurs initiales à mettre à jour.');
         });
         await test('Les quatre exercices sont les composantes indépendantes du graphe', () => {
-            const seen = model.exercises.flatMap(exercise => exercise.nodes);
+            const seen = model.exercises.slice(0, 4).flatMap(exercise => exercise.nodes);
             assert(seen.length === 15 && new Set(seen).size === 15, 'Chaque bouton doit appartenir à un seul exercice.');
-            model.exercises.forEach(exercise => exercise.nodes.forEach(id => {
+            model.exercises.slice(0, 4).forEach(exercise => exercise.nodes.forEach(id => {
                 assert(parents[id].every(parent => exercise.nodes.includes(parent)), 'Parent extérieur à l’exercice.');
             }));
         });
-        await test('2250 configurations : mêmes états que la boucle Arduino', () => {
+        if (source) await test('2250 configurations : mêmes états que la boucle Arduino', () => {
             let configurations = 0;
-            for (const exercise of model.exercises) {
+            for (const exercise of model.exercises.slice(0, 4)) {
                 for (let combination = 0; combination < 3 ** exercise.nodes.length; combination++) {
                     const states = model.createNodeStates(exercise);
                     const physical = Array.from({ length: 15 }, () => ({ isOn: false, isInterv: false }));
@@ -93,13 +95,54 @@
         });
         await test('La correction exige exactement les arêtes directes orientées', () => {
             for (const exercise of model.exercises) {
-                const correct = exercise.nodes.flatMap(to => parents[to].map(from => ({ from, to })));
+                const correct = exercise.nodes.flatMap(to => exercise.parents[to].map(from => ({ from, to })));
                 assert(model.checkEdges(exercise, correct).correct, 'Bonne solution refusée.');
                 assert(model.checkEdges(exercise, correct.slice(1)).missing === 1, 'Arête manquante non détectée.');
                 const reversed = correct.map(({ from, to }) => ({ from: to, to: from }));
                 assert(!model.checkEdges(exercise, reversed).correct, 'Orientation inverse acceptée.');
                 assert(model.checkEdges(exercise, [...correct, { from: correct[0].to, to: correct[0].from }]).extra === 1, 'Arête de trop non détectée.');
             }
+        });
+
+        await test('Graphes aléatoires : taille, connexité, absence de cycles et reproductibilité', () => {
+            const variants = new Set();
+            for (let seed = 0; seed < 100; seed++) {
+                for (const exercise of [model.createRandomExercise(seed), model.createDailyExercise(new Date(Date.UTC(2026, 0, seed + 1)))]) {
+                    const size = exercise.id === 'random' ? 7 : 9;
+                    const count = exercise.id === 'random' ? 7 : 11;
+                    assert(exercise.nodes.length === size && exercise.parents.flat().length === count, 'Complexité incorrecte.');
+                    const remaining = new Set(exercise.nodes);
+                    while (remaining.size) {
+                        const ready = [...remaining].filter(id => exercise.parents[id].every(parent => !remaining.has(parent)));
+                        assert(ready.length, 'Cycle détecté.');
+                        ready.forEach(id => remaining.delete(id));
+                    }
+                    const visited = new Set([exercise.nodes[0]]);
+                    for (let i = 0; i < size; i++) exercise.nodes.forEach(to => exercise.parents[to].forEach(from => {
+                        if (visited.has(from) || visited.has(to)) { visited.add(from); visited.add(to); }
+                    }));
+                    assert(visited.size === size, 'Bouton isolé du réseau.');
+                    if (seed < 8) for (const from of exercise.nodes) for (const to of exercise.nodes) {
+                        if (from === to) continue;
+                        const states = model.createNodeStates(exercise);
+                        exercise.nodes.forEach(id => { states[id].isInterv = id !== to; });
+                        states[from].isOn = true;
+                        assert(model.evaluate(exercise, states)[to].isOn === exercise.parents[to].includes(from), 'Influence directe incorrecte.');
+                    }
+                }
+                const exercise = model.createRandomExercise(seed);
+                assert(JSON.stringify(exercise.parents) === JSON.stringify(model.createRandomExercise(seed).parents), 'Seed non reproductible.');
+                variants.add(JSON.stringify(exercise.parents));
+            }
+            assert(variants.size > 90, 'Pas assez de diversité.');
+        });
+        await test('Défi quotidien : même date, même graphe ; changement à minuit à Paris', () => {
+            const first = model.createDailyExercise(new Date('2026-10-19T00:00:00Z'));
+            const last = model.createDailyExercise(new Date('2026-10-19T21:59:59Z'));
+            const next = model.createDailyExercise(new Date('2026-10-19T22:00:00Z'));
+            assert(first.seed === 20261019 && JSON.stringify(first.parents) === JSON.stringify(last.parents), 'Défi instable au cours de la journée.');
+            assert(next.seed === 20261020 && JSON.stringify(next.parents) !== JSON.stringify(first.parents), 'Défi non renouvelé à minuit.');
+            assert(model.daySeed(new Date('2026-10-25T22:59:59Z')) === 20261025 && model.daySeed(new Date('2026-10-25T23:00:00Z')) === 20261026, 'Heure d’hiver incorrecte.');
         });
 
         const frame = document.getElementById('app');
@@ -126,8 +169,8 @@
         const waitTap = () => new Promise(resolve => win.setTimeout(resolve, 370));
         const settleLayout = () => new Promise(resolve => win.setTimeout(resolve, 60));
 
-        await test('Interface : quatre onglets et aucune flèche révélée au démarrage', () => {
-            assert(doc.querySelectorAll('[role="tab"]').length === 4, 'Onglets absents.');
+        await test('Interface : six onglets et aucune flèche révélée au démarrage', () => {
+            assert(doc.querySelectorAll('[role="tab"]').length === 6, 'Onglets absents.');
             assert(doc.querySelectorAll('.node-light').length === 2, 'Mauvais premier exercice.');
             assert(doc.querySelectorAll('.edge').length === 0, 'Une arête est révélée.');
             assert(doc.querySelector('#first-steps').dataset.step === 'help', 'Invitation à ouvrir l’aide absente.');
@@ -253,17 +296,17 @@
             assert(doc.querySelector('#draft-edge').hasAttribute('hidden'), 'Aperçu non retiré.');
         });
         await test('Interface : correction et remise à zéro de chaque exercice', async () => {
-            for (const exercise of model.exercises) {
+            for (const exercise of win.CausalTablet.exercises) {
                 click(`#tab-${exercise.id}`);
                 click('#reset-buttons');
                 assert([...doc.querySelectorAll('.node-light')].every(button => !button.classList.contains('is-on') && !button.classList.contains('is-intervention')), 'Reset incomplet.');
                 click('#clear-edges');
                 // Wait out the suppression of the synthetic post-drag click.
                 await new Promise(resolve => win.setTimeout(resolve, 410));
-                exercise.nodes.forEach(to => parents[to].forEach(from => draw(from, to)));
+                exercise.nodes.forEach(to => exercise.parents[to].forEach(from => draw(from, to)));
                 click('#check-edges');
                 assert(doc.querySelector('#feedback').classList.contains('is-correct'), `Correction incorrecte : ${exercise.id}`);
-                assert(Boolean(doc.querySelector('#next-level')) === (exercise !== model.exercises.at(-1)), 'Navigation incorrecte après réussite.');
+                assert(Boolean(doc.querySelector('#next-level')) === (exercise.id !== 'daily'), 'Navigation incorrecte après réussite.');
                 assert(doc.querySelector('#feedback').textContent.includes('Êtes-vous sûr d’avoir tout testé ou avez-vous eu de la chance ?'), 'Invitation à vérifier le raisonnement absente.');
                 click('#close-result');
             }
@@ -406,7 +449,7 @@
                 for (const button of doc.querySelectorAll('.node-light')) {
                     const rect = button.getBoundingClientRect();
                     assert(rect.right <= help.left || rect.left >= help.right || rect.bottom <= help.top || rect.top >= help.bottom,
-                        `Aide masquant un voyant à ${width}px.`);
+                        `Aide masquant un voyant à ${width}px : aide ${JSON.stringify(help)}, voyant ${JSON.stringify(rect)}, classe ${doc.querySelector('#help-panel').className}, contenu masqué ${doc.querySelector('#help-content').hidden}, mode ordinateur ${win.matchMedia('(min-width: 1000px)').matches}.`);
                 }
                 const before = isOn(0);
                 light(0).click();
@@ -431,6 +474,82 @@
                 click('#close-result');
             }
             click('#close-help');
+        });
+        await test('Graphes générés : boutons accessibles avec et sans aide, sur ordinateur et téléphone', async () => {
+            for (const id of ['random', 'daily']) {
+                click(`#tab-${id}`);
+                click('#close-result');
+                for (const [width, height] of [[320, 667], [390, 844], [844, 390], [1100, 800]]) {
+                    frame.style.width = `${width}px`;
+                    frame.style.height = `${height}px`;
+                    for (const open of [false, true]) {
+                        if (doc.querySelector('#help-panel').hidden === open) click('#open-help');
+                        await settleLayout();
+                        assert(doc.documentElement.scrollWidth <= width, `Débordement : ${id}, ${width}px.`);
+                        const hud = doc.querySelector('#game-hud').getBoundingClientRect();
+                        const actions = doc.querySelector('.tablet-actions').getBoundingClientRect();
+                        const help = doc.querySelector('#help-panel').getBoundingClientRect();
+                        const lights = [...doc.querySelectorAll('.node-light')].map(button => button.getBoundingClientRect());
+                        for (const rect of lights) {
+                            assert(rect.left >= 0 && rect.right <= width && rect.top >= hud.bottom && rect.bottom <= actions.top, `Bouton masqué : ${id}, ${width}px, aide ${open}, voyant ${JSON.stringify(rect)}, haut ${hud.bottom}, bas ${actions.top}.`);
+                            if (open) assert(rect.right <= help.left || rect.left >= help.right || rect.bottom <= help.top || rect.top >= help.bottom, `Aide masquant un bouton : ${id}, ${width}px.`);
+                        }
+                        for (let i = 0; i < lights.length; i++) for (let j = i + 1; j < lights.length; j++) {
+                            const a = lights[i], b = lights[j];
+                            assert(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top, `Boutons superposés : ${id}, ${width}px, ${i}/${j}, ${JSON.stringify(a)}, ${JSON.stringify(b)}.`);
+                        }
+                    }
+                }
+            }
+        });
+        await test('Chronos : indépendants, pause entre onglets, arrêt à la réussite et nouvelle partie', () => {
+            const descriptor = Object.getOwnPropertyDescriptor(win.performance, 'now');
+            let now = win.performance.now() + 1000;
+            Object.defineProperty(win.performance, 'now', { configurable: true, value: () => now });
+            const timer = () => doc.querySelector('#exercise-timer').textContent;
+            try {
+                click('#close-help');
+                click('#tab-random');
+                click('#new-graph');
+                assert(timer() === '00:00' && !doc.querySelector('#timed-controls').hidden, 'Chrono aléatoire absent ou non remis à zéro.');
+                doubleTap(0); light(0).click(); draw(0, 1);
+                now += 3000;
+                click('#tab-duo');
+                assert(doc.querySelector('#timed-controls').hidden, 'Chrono sur un exercice classique.');
+                now += 5000;
+                click('#tab-random');
+                assert(timer() === '00:03' && doc.querySelectorAll('.edge').length === 1 && isInterv(0), 'Pause ou conservation de la partie incorrecte.');
+                now += 2000;
+                click('#tab-daily');
+                assert(doc.querySelector('#new-graph').hidden && !doc.querySelector('#challenge-date').hidden, 'Bouton pour recommencer le défi encore présent.');
+                const before = timer();
+                const edgeCount = doc.querySelectorAll('.edge').length;
+                click('#new-graph');
+                assert(timer() === before && doc.querySelectorAll('.edge').length === edgeCount, 'Le défi peut être relancé par le bouton masqué.');
+                click('#reset-buttons');
+                click('#clear-edges');
+                assert(timer() === before, 'Les commandes du défi remettent le chrono à zéro.');
+                const startSeconds = before.split(':').map(Number).reduce((minutes, seconds) => minutes * 60 + seconds);
+                now += 4000;
+                const daily = win.CausalTablet.createDailyExercise();
+                daily.nodes.forEach(to => daily.parents[to].forEach(from => draw(from, to)));
+                click('#check-edges');
+                const finalTime = timer();
+                const finalSeconds = finalTime.split(':').map(Number).reduce((minutes, seconds) => minutes * 60 + seconds);
+                assert(doc.querySelector('#feedback').classList.contains('is-correct') && finalSeconds === startSeconds + 4, 'Défi ou arrêt du chrono incorrect.');
+                now += 9000;
+                click('#tab-random');
+                assert(timer() === '00:05', 'Les deux chronos interfèrent.');
+                click('#new-graph');
+                assert(timer() === '00:00' && doc.querySelectorAll('.edge').length === 0 && !isInterv(0), 'Nouvelle partie incomplète.');
+                click('#tab-duo'); click('#tab-random');
+                assert(doc.querySelectorAll('.edge').length === 0, 'Ancienne partie restaurée par l’onglet.');
+                click('#tab-daily');
+                assert(timer() === finalTime, 'Chrono relancé après réussite.');
+            } finally {
+                if (descriptor) Object.defineProperty(win.performance, 'now', descriptor);
+                else delete win.performance.now;
+            }
         });
         document.body.dataset.testStatus = failed ? 'failed' : 'passed';
         results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;

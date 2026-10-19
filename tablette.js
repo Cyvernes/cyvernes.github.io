@@ -11,20 +11,21 @@
         'nodes',
         'clear-edges', 'check-edges', 'feedback', 'announcement',
         'game-hud', 'open-help', 'close-help', 'help-panel',
-        'close-result', 'result-panel', 'expand-help', 'help-content'
+        'close-result', 'result-panel', 'expand-help', 'help-content',
+        'timed-controls', 'exercise-timer', 'challenge-date', 'new-graph'
     ].map(id => [id, byId(id)]));
 
     // Only the true causal model affects the lights. A learner's arrows never do.
-    const sessions = new Map(model.exercises.map(exercise => [exercise.id, {
-        states: model.createNodeStates(exercise), edges: [],
-        feedback: null
-    }]));
+    const exercises = [...model.exercises];
+    const freshSession = exercise => ({ states: model.createNodeStates(exercise), edges: [],
+        feedback: null, elapsed: 0, startedAt: null });
+    const sessions = new Map(exercises.map(exercise => [exercise.id, freshSession(exercise)]));
     const nodeElements = new Map();
     const tabElements = new Map();
     const clickTimers = new Map();
     const discovered = { help: false, intervention: false, value: false, arrow: false };
     let gestureNotice = '';
-    let activeExercise = model.exercises[0];
+    let activeExercise = exercises[0];
     let drag = null;
     let ignoreClickUntil = 0;
     let resizeFrame = 0;
@@ -32,6 +33,30 @@
 
     function session() { return sessions.get(activeExercise.id); }
     function announce(message) { ui.announcement.textContent = message; }
+
+    function pauseClock() {
+        const current = session();
+        if (current.startedAt !== null) current.elapsed += performance.now() - current.startedAt;
+        current.startedAt = null;
+    }
+
+    function syncClock() {
+        const current = session();
+        if (activeExercise.timed && !document.hidden && !current.feedback?.correct) {
+            if (current.startedAt === null) current.startedAt = performance.now();
+        } else pauseClock();
+        const elapsed = current.elapsed + (current.startedAt === null ? 0 : performance.now() - current.startedAt);
+        const seconds = Math.floor(elapsed / 1000);
+        ui['exercise-timer'].textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+        ui['exercise-timer'].setAttribute('aria-label', current.feedback?.correct ? 'Temps final' : 'Temps de jeu');
+    }
+
+    function replaceExercise(exercise) {
+        const index = exercises.findIndex(item => item.id === exercise.id);
+        exercises[index] = exercise;
+        sessions.set(exercise.id, freshSession(exercise));
+        return exercise;
+    }
 
     function cancelClicks() {
         clickTimers.forEach(timer => clearTimeout(timer));
@@ -48,7 +73,7 @@
     }
 
     function createTabs() {
-        model.exercises.forEach(exercise => {
+        exercises.forEach(exercise => {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'exercise-tab';
@@ -62,14 +87,14 @@
             done.textContent = '✓';
             done.setAttribute('aria-hidden', 'true');
             button.append(label, done);
-            button.addEventListener('click', () => selectExercise(exercise));
+            button.addEventListener('click', () => selectExercise(exercises.find(item => item.id === exercise.id)));
             tabElements.set(exercise.id, button);
             ui['exercise-tabs'].append(button);
         });
     }
 
     function renderTabs() {
-        model.exercises.forEach((exercise, index) => {
+        exercises.forEach((exercise, index) => {
             const button = tabElements.get(exercise.id);
             const selected = exercise === activeExercise;
             const solved = sessions.get(exercise.id).feedback?.correct === true;
@@ -83,6 +108,17 @@
         if (exercise.id === 'reseau') {
             // A neutral, fixed arrangement; never infer positions from edges.
             return { 0: [27, 17], 6: [73, 17], 14: [17, 50], 4: [50, 50], 13: [83, 50], 5: [27, 83], 12: [73, 83] };
+        }
+        if (exercise.nodes.length === 7) {
+            const points = [[27, 17], [73, 17], [17, 50], [50, 50], [83, 50], [27, 83], [73, 83]];
+            return Object.fromEntries(exercise.nodes.map((id, index) => [id, points[index]]));
+        }
+        if (exercise.nodes.length === 9) {
+            // An odd ring leaves the centre free, without aligning three buttons.
+            return Object.fromEntries(exercise.nodes.map((id, index) => {
+                const angle = -Math.PI / 2 + index * 2 * Math.PI / exercise.nodes.length;
+                return [id, [50 + 40 * Math.cos(angle), 50 + 40 * Math.sin(angle)]];
+            }));
         }
         const points = exercise.nodes.length === 2 ? [[30, 50], [70, 50]] : [[50, 25], [24, 75], [76, 75]];
         return Object.fromEntries(exercise.nodes.map((id, index) => [id, points[index]]));
@@ -112,9 +148,16 @@
     }
 
     function selectExercise(exercise) {
+        pauseClock();
+        if (exercise.id === 'daily' && exercise.seed !== model.daySeed()) exercise = replaceExercise(model.createDailyExercise());
         cancelClicks();
         cancelDraft();
         activeExercise = exercise;
+        ui['timed-controls'].hidden = !exercise.timed;
+        ui['challenge-date'].hidden = exercise.id !== 'daily';
+        ui['challenge-date'].textContent = exercise.dateLabel ? `Défi du ${exercise.dateLabel}` : '';
+        ui['new-graph'].hidden = exercise.id !== 'random';
+        syncClock();
         ui['result-panel'].hidden = true;
         ui.board.dataset.exercise = exercise.id;
         ui['exercise-panel'].setAttribute('aria-labelledby', `tab-${exercise.id}`);
@@ -127,7 +170,7 @@
         renderGuidance();
         layoutBoard();
         renderEdges();
-        announce(`Exercice ${model.exercises.indexOf(exercise) + 1} : ${exercise.label}. ${exercise.nodes.length} boutons.`);
+        announce(`Exercice ${exercises.indexOf(exercise) + 1} : ${exercise.label}. ${exercise.nodes.length} boutons.`);
     }
 
     function renderStates() {
@@ -455,6 +498,7 @@
 
     function renderEdges() {
         const current = session();
+        syncClock();
         ui['clear-edges'].disabled = current.edges.length === 0;
         renderConnections();
         renderFeedback();
@@ -497,8 +541,9 @@
         heading.textContent = result.correct ? 'Bien joué !' : 'Pas encore…';
         const detail = document.createElement('span');
         if (result.correct) {
-            const nextExercise = model.exercises[model.exercises.indexOf(activeExercise) + 1];
-            detail.textContent = nextExercise ? 'Vous avez trouvé toutes les flèches.' : 'Vous avez terminé le dernier niveau !';
+            const nextExercise = exercises[exercises.indexOf(activeExercise) + 1];
+            detail.textContent = activeExercise.timed ? `Vous avez trouvé toutes les flèches en ${ui['exercise-timer'].textContent}.`
+                : 'Vous avez trouvé toutes les flèches.';
             const reflection = document.createElement('p');
             reflection.textContent = 'Êtes-vous sûr d’avoir tout testé ou avez-vous eu de la chance ?';
             ui.feedback.append(heading, detail, reflection);
@@ -576,6 +621,7 @@
     ui['check-edges'].addEventListener('click', () => {
         cancelClicks();
         session().feedback = model.checkEdges(activeExercise, session().edges);
+        syncClock();
         renderFeedback();
         renderTabs();
         if (!sideHelp.matches) setHelp(false);
@@ -584,6 +630,20 @@
         renderConnections();
         ui['result-panel'].scrollIntoView({ block: 'nearest', behavior: 'instant' });
     });
+
+    ui['new-graph'].addEventListener('click', () => {
+        if (activeExercise.id !== 'random') return;
+        pauseClock();
+        selectExercise(replaceExercise(model.createRandomExercise()));
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && activeExercise.id === 'daily' && activeExercise.seed !== model.daySeed()) selectExercise(activeExercise);
+        else syncClock();
+    });
+    window.setInterval(() => {
+        if (activeExercise.id === 'daily' && activeExercise.seed !== model.daySeed()) selectExercise(activeExercise);
+        else syncClock();
+    }, 250);
 
     ui['open-help'].addEventListener('click', () => {
         cancelClicks();
@@ -644,7 +704,7 @@
         const bottom = Math.ceil(actionsHeight + 18 + Math.max(helpHeight, resultHeight));
         const nodeHeight = nodeElements.values().next().value.node.getBoundingClientRect().height;
         const rows = activeExercise.nodes.length > 3 ? 3 : activeExercise.nodes.length > 2 ? 2 : 1;
-        const playHeight = Math.ceil(nodeHeight * rows + 48);
+        const playHeight = Math.ceil(nodeHeight * rows + (activeExercise.id === 'daily' ? 96 : 48));
         app.style.setProperty('--game-min-height', `${top + bottom + playHeight}px`);
         app.style.setProperty('--play-top', `${top}px`);
         app.style.setProperty('--play-bottom', `${bottom}px`);
@@ -673,17 +733,20 @@
 
     function scheduleConnections() {
         cancelAnimationFrame(resizeFrame);
-        resizeFrame = requestAnimationFrame(() => {
-            layoutBoard();
-            renderConnections();
-        });
+        resizeFrame = requestAnimationFrame(refreshLayout);
+    }
+
+    function refreshLayout() {
+        layoutBoard();
+        renderConnections();
     }
     if (typeof ResizeObserver !== 'undefined') {
         const observer = new ResizeObserver(scheduleConnections);
         [ui.board, ui['game-hud'], document.querySelector('.tablet-actions'), ui['result-panel'],
             ui['help-panel'].querySelector('.dialog-toolbar')].forEach(element => observer.observe(element));
     }
-    window.addEventListener('resize', scheduleConnections);
+    window.addEventListener('resize', refreshLayout);
+    sideHelp.addEventListener('change', refreshLayout);
 
     createTabs();
     selectExercise(activeExercise);

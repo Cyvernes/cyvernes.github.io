@@ -23,6 +23,11 @@
                 <button type="button" id="open-help" class="overlay-button" aria-expanded="false" aria-controls="help-panel">Aide <span aria-hidden="true">?</span></button>
             </div>
             <div class="exercise-tabs" id="exercise-tabs" role="tablist" aria-label="Choisir un exercice"></div>
+            <div id="timed-controls" class="timed-controls" hidden>
+                <span id="challenge-date" hidden></span>
+                <span>Chrono · <span id="exercise-timer" role="timer" aria-label="Temps de jeu">00:00</span></span>
+                <button type="button" id="new-graph" class="reset-button" title="Tirer un nouveau graphe et remettre le chrono à zéro">Nouveau graphe</button>
+            </div>
             <p id="first-steps" class="first-steps" role="status" aria-live="polite">Pour commencer, ouvrez l’aide : vous y trouverez les règles et des astuces.</p>
         </header>
 
@@ -91,6 +96,7 @@
                                 <li><strong>Position des boutons.</strong> Leur disposition ne donne aucun indice sur les relations à découvrir.</li>
                                 <li><strong>Absence de cycles.</strong> Dans ce jeu, aucune suite de flèches ne peut revenir à son point de départ.</li>
                                 <li><strong>Essais conservés.</strong> Chaque exercice est indépendant ; vous retrouvez vos essais en revenant sur son onglet.</li>
+                                <li><strong>Chrono.</strong> Dans « Pour s’amuser » et « Le défi du jour », le temps compte tant que vous jouez sur l’onglet et s’arrête à la réussite. « Nouveau graphe » renouvelle l’exercice libre et remet ses essais et son chrono à zéro. Dans le défi du jour, réinitialiser les boutons ou effacer les flèches conserve le temps écoulé.</li>
                             </ul>
                         </details>
                     </section>

@@ -34,13 +34,15 @@ main { position: relative; min-height: 100vh; min-height: max(100dvh, var(--game
 h1 { font-size: 20px; line-height: 1.2; font-weight: 650; margin: 0; text-align: center; }
 .back-link, .overlay-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; color: #e5edf8; background: var(--panel); font-size: 14px; text-decoration: none; }
 .overlay-button:hover, .back-link:hover { background: #284263; }
-.exercise-tabs { grid-column: 1; display: flex; gap: 5px; padding: 4px; max-width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.exercise-tabs { grid-column: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding: 4px; max-width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
 .exercise-tab { display: flex; gap: 8px; align-items: center; justify-content: center; min-height: 44px; border: 1px solid transparent; border-radius: 8px; padding: 8px 14px; background: transparent; color: var(--muted); font-size: 14px; white-space: nowrap; }
 .exercise-tab[aria-selected="true"] { background: #e5edf8; color: #172b45; }
 .exercise-tab:hover:not([aria-selected="true"]) { background: #284263; color: white; }
 .tab-done { color: #8de6b8; font-size: 14px; }
 .exercise-tab[aria-selected="true"] .tab-done { color: #216241; }
 .first-steps { grid-column: 1; max-width: 560px; margin: 0; padding: 10px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: #d5e5fb; font-size: 14px; text-align: center; }
+.timed-controls { grid-column: 1; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 16px; color: var(--muted); font-size: 13px; }
+#exercise-timer { color: #e5edf8; font-variant-numeric: tabular-nums; }
 .connections, .nodes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .connections { z-index: 1; overflow: visible; }
 .nodes { z-index: 2; top: var(--play-top, 180px); bottom: var(--play-bottom, 100px); right: var(--help-space, 0px); width: auto; height: auto; }
@@ -108,7 +110,7 @@ h3 { color: #e5edf8; font-size: 18px; margin: 0; }
     h1 { font-size: 16px; }
     .back-link, .overlay-button { font-size: 13px; padding: 8px 10px; gap: 5px; }
     .exercise-tabs { width: 100%; }
-    .exercise-tab { flex: 1; min-width: 0; padding: 8px 4px; gap: 4px; font-size: 13px; }
+    .exercise-tab { flex: 1 0 28%; min-width: 0; padding: 8px 4px; gap: 4px; font-size: 13px; }
     .first-steps { font-size: 13px; padding: 8px 12px; }
     .tablet-node { width: 60px; }
     .node-light { width: 60px; height: 60px; font-size: 20px; }
