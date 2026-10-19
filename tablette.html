@@ -63,13 +63,14 @@
                         <p>Découvrez quels boutons agissent <strong>directement</strong> sur les autres. Intervenez sur les boutons, observez lesquels s’allument ou s’éteignent, puis tracez les flèches pour reconstituer les relations cachées.</p>
                         <p>Quand vous pensez avoir trouvé toutes les relations directes, appuyez sur <strong>Vérifier mes flèches</strong>. Les flèches que vous dessinez sont vos hypothèses : elles ne modifient pas le fonctionnement des boutons.</p>
                         <h3>Le principe</h3>
-                        <p>Un bouton <strong>naturel</strong> réagit aux autres. En <strong>intervention</strong>, vous imposez son état : il ne suit plus ses causes.</p>
+                        <p>Chaque bouton a éventuellement des « parents » : ce sont ses <strong>causes directes</strong>. Au naturel, il s’allume dès qu’au moins un de ses parents est allumé ; sinon, il reste éteint.</p>
+                        <p>En <strong>intervention</strong>, vous coupez l’influence de ses parents et imposez son état. Il continue cependant d’agir sur les boutons dont il est lui-même parent.</p>
                         <div class="legend" aria-label="Couleur et éclairage des boutons">
                             <span><i class="legend-light natural-off" aria-hidden="true"></i><span>Gris : naturel</span></span>
                             <span><svg class="legend-symbol" width="12" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><span>Rouge et verrou : intervention</span></span>
                             <span><span class="legend-symbol" aria-hidden="true">◐</span><span>Sombre : éteint<br>Lumineux : allumé</span></span>
                         </div>
-                        <p>Une flèche <strong>A → B</strong> signifie que A cause directement B.</p>
+                        <p>Faites varier les boutons pour découvrir ces relations : une flèche <strong>A → B</strong> signifie que <strong>A est une cause directe de B</strong>.</p>
                         <details>
                             <summary>Les contrôles</summary>
                             <ul id="controls-help">

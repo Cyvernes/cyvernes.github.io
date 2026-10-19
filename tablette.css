@@ -44,8 +44,8 @@ h1 { font-size: 20px; line-height: 1.2; font-weight: 650; margin: 0; text-align:
 .connections, .nodes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .connections { z-index: 1; overflow: visible; }
 .nodes { z-index: 2; top: var(--play-top, 180px); bottom: var(--play-bottom, 100px); right: var(--help-space, 0px); width: auto; height: auto; }
-.tablet-node { position: absolute; transform: translate(-50%, -50%); width: 86px; text-align: center; pointer-events: none; color: #e3eaf2; }
-.node-light { width: 86px; height: 86px; display: block; margin: 0 auto 9px; border: 2px solid #8293a8; border-radius: 50%; background: radial-gradient(ellipse at 40% 20%, #3b5067 0%, #202e40 45%, #101b2a 100%); box-shadow: 0 5px 12px #0006, inset 0 2px 3px #ffffff26, inset 0 -5px 9px #0006; pointer-events: auto; position: relative; touch-action: none; user-select: none; cursor: grab; }
+.tablet-node { position: absolute; transform: translate(-50%, -50%); width: 76px; text-align: center; pointer-events: none; color: #e3eaf2; }
+.node-light { width: 76px; height: 76px; display: block; margin: 0 auto 9px; border: 2px solid #8293a8; border-radius: 50%; background: radial-gradient(ellipse at 40% 20%, #3b5067 0%, #202e40 45%, #101b2a 100%); box-shadow: 0 5px 12px #0006, inset 0 2px 3px #ffffff26, inset 0 -5px 9px #0006; pointer-events: auto; position: relative; touch-action: none; user-select: none; cursor: grab; }
 /* Draw the lights entirely in CSS, without a native mobile button skin. */
 .node-light { -webkit-appearance: none; appearance: none; }
 .node-light::before { content: ''; position: absolute; top: 10%; left: 22%; width: 56%; height: 28%; border-radius: 50%; background: linear-gradient(#ffffff30, #ffffff00); pointer-events: none; }
@@ -110,8 +110,8 @@ h3 { color: #e5edf8; font-size: 18px; margin: 0; }
     .exercise-tabs { width: 100%; }
     .exercise-tab { flex: 1; min-width: 0; padding: 8px 4px; gap: 4px; font-size: 13px; }
     .first-steps { font-size: 13px; padding: 8px 12px; }
-    .tablet-node { width: 64px; }
-    .node-light { width: 64px; height: 64px; font-size: 20px; }
+    .tablet-node { width: 60px; }
+    .node-light { width: 60px; height: 60px; font-size: 20px; }
     .tablet-actions { width: calc(100% - 20px); max-width: none; padding: 8px 10px; gap: 4px; flex-direction: column-reverse; bottom: max(10px, env(safe-area-inset-bottom)); }
     .check-button { width: 100%; }
     .reset-actions { width: 100%; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; }
@@ -130,6 +130,8 @@ h3 { color: #e5edf8; font-size: 18px; margin: 0; }
 .result-close { position: absolute; top: 8px; right: 8px; min-width: 44px; justify-content: center; }
 .feedback { padding-top: 20px; }
 .feedback strong { padding-right: 44px; }
+.feedback:not(.is-correct) { padding: 14px 16px; }
+.feedback:not(.is-correct) strong { margin-bottom: 0; }
 @media (max-width: 999px) {
     .help-panel { top: auto; bottom: var(--actions-space, 100px); left: 10px; right: 10px; width: auto; max-height: min(65dvh, 560px); }
     #expand-help { display: inline-flex; }

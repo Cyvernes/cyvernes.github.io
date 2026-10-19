@@ -32,7 +32,6 @@
 
     function session() { return sessions.get(activeExercise.id); }
     function announce(message) { ui.announcement.textContent = message; }
-    function plural(count, one, many) { return `${count} ${count === 1 ? one : many}`; }
 
     function cancelClicks() {
         clickTimers.forEach(timer => clearTimeout(timer));
@@ -524,13 +523,8 @@
                 ui.feedback.append(next);
             }
             return;
-        } else {
-            const issues = [];
-            if (result.extra) issues.push(plural(result.extra, 'flèche incorrecte', 'flèches incorrectes'));
-            if (result.missing) issues.push(plural(result.missing, 'flèche manquante', 'flèches manquantes'));
-            detail.textContent = `${issues.join(' et ')}. Continuez à expérimenter.`;
         }
-        ui.feedback.append(heading, detail);
+        ui.feedback.append(heading);
     }
 
     document.addEventListener('pointermove', event => {
