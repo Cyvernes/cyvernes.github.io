@@ -130,7 +130,12 @@
             assert(doc.querySelectorAll('[role="tab"]').length === 4, 'Onglets absents.');
             assert(doc.querySelectorAll('.node-light').length === 2, 'Mauvais premier exercice.');
             assert(doc.querySelectorAll('.edge').length === 0, 'Une arête est révélée.');
-            assert(doc.querySelector('#first-steps').dataset.step === 'intervention', 'Premier geste non expliqué.');
+            assert(doc.querySelector('#first-steps').dataset.step === 'help', 'Invitation à ouvrir l’aide absente.');
+            click('#open-help');
+            assert(!doc.querySelector('#help-panel').hidden, 'Aide inaccessible au démarrage.');
+            assert(doc.querySelector('#first-steps').dataset.step === 'intervention', 'Premier geste non expliqué après ouverture de l’aide.');
+            click('#close-help');
+            assert(doc.querySelector('#first-steps').dataset.step === 'intervention', 'Invitation à ouvrir l’aide répétée.');
             assert(!doc.querySelector('#board-stats') && !doc.querySelector('#button-count'), 'Compteurs encore présents.');
         });
         await test('Interface : intervenir, allumer et bloquer un effet', () => {

@@ -22,7 +22,7 @@
     const nodeElements = new Map();
     const tabElements = new Map();
     const clickTimers = new Map();
-    const discovered = { intervention: false, value: false, arrow: false };
+    const discovered = { help: false, intervention: false, value: false, arrow: false };
     let gestureNotice = '';
     let activeExercise = model.exercises[0];
     let drag = null;
@@ -149,7 +149,10 @@
         let step = 'done';
         let message = '';
         const hasIntervention = activeExercise.nodes.some(id => session().states[id].isInterv);
-        if (!discovered.intervention || (!discovered.value && !hasIntervention)) {
+        if (!discovered.help) {
+            step = 'help';
+            message = 'Pour commencer, ouvrez l’aide : vous y trouverez les règles et des astuces.';
+        } else if (!discovered.intervention || (!discovered.value && !hasIntervention)) {
             step = 'intervention';
             message = 'Appuyez deux fois sur un bouton pour intervenir.';
         } else if (!discovered.value) {
@@ -608,6 +611,11 @@
     }
 
     function setHelp(open) {
+        if (open) {
+            discovered.help = true;
+            gestureNotice = '';
+            renderGuidance();
+        }
         ui['help-panel'].hidden = !open;
         ui['open-help'].setAttribute('aria-expanded', String(open));
         ui['help-panel'].classList.remove('is-expanded');
