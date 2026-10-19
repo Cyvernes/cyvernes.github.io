@@ -326,15 +326,39 @@
                 click('#tab-reseau');
                 click('#clear-edges');
                 await settleLayout();
+                const paths = new Map();
+                const edgePath = (from, to) => doc.querySelector(`.edge[aria-label="Supprimer la flèche ${from} vers ${to}"] .edge-line`);
+                const assertStablePaths = (except = '') => {
+                    for (const [key, path] of paths) {
+                        if (key === except) continue;
+                        const [from, to] = key.split(',');
+                        assert(edgePath(from, to).getAttribute('d') === path, `Tracé modifié à ${width}px : ${from} → ${to}.`);
+                    }
+                };
                 for (const [from, to] of pairs) {
                     light(to).scrollIntoView({ block: 'center' });
                     draw(from, to);
                     await settleLayout();
+                    assertStablePaths(`${to},${from}`);
+                    paths.set(`${from},${to}`, edgePath(from, to).getAttribute('d'));
+                    if (paths.has(`${to},${from}`)) paths.set(`${to},${from}`, edgePath(to, from).getAttribute('d'));
                 }
                 assert(doc.querySelectorAll('.edge').length === pairs.length, 'Flèches perdues pendant le tracé.');
+                click('#clear-edges');
+                for (const [from, to] of [...pairs].reverse()) draw(from, to);
+                await settleLayout();
+                assertStablePaths();
+                const [removedFrom, removedTo] = pairs[0];
+                edgePath(removedFrom, removedTo).parentNode.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+                paths.delete(`${removedFrom},${removedTo}`);
+                await settleLayout();
+                assertStablePaths(`${removedTo},${removedFrom}`);
+                draw(removedFrom, removedTo);
+                await settleLayout();
+                assertStablePaths();
                 for (const [from, to] of pairs.slice(0, 5)) {
-                    const forward = doc.querySelector(`.edge[aria-label="Supprimer la flèche ${from} vers ${to}"] .edge-line`);
-                    const reverse = doc.querySelector(`.edge[aria-label="Supprimer la flèche ${to} vers ${from}"] .edge-line`);
+                    const forward = edgePath(from, to);
+                    const reverse = edgePath(to, from);
                     const reversePoints = Array.from({ length: 101 }, (_, i) => reverse.getPointAtLength(reverse.getTotalLength() * i / 100));
                     let overlap = 0;
                     for (let i = 0; i <= 20; i++) {

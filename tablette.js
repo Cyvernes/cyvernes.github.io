@@ -384,15 +384,14 @@
         return { d: `${d} L ${last.x} ${last.y}`, points: waypoints };
     }
 
-    function routeEdge(edge, geometry, previous) {
+    function routeEdge(edge, geometry) {
         const from = geometry.lights.get(edge.from);
         const to = geometry.lights.get(edge.to);
         const dx = to.x - from.x;
         const dy = to.y - from.y;
         const distance = Math.hypot(dx, dy) || 1;
         const reciprocal = session().edges.some(other => other.from === edge.to && other.to === edge.from);
-        // Give opposite arrows opposite sides of the line between their lights.
-        // Apply this to detours too, so both cannot pick the same narrow passage.
+        // Only opposite arrows interact: keep each on its own side, including detours.
         if (reciprocal) geometry = { ...geometry, lane: { x: from.x, y: from.y, dx, dy } };
         const bends = [24, -24, 48, -48, 80, -80, 120, -120, 180, -180, 260, -260, 360, -360, 520, -520, 760, -760];
         const candidates = reciprocal ? [] : [curvedRoute(from, to, null)];
@@ -417,13 +416,6 @@
                     if (insideObstacle(point, obstacle)) score += 100000;
                 }
                 if (index) score += Math.hypot(point.x - candidate.points[index - 1].x, point.y - candidate.points[index - 1].y);
-                if (index % 6 === 0) {
-                    for (const route of previous) {
-                        for (let i = 0; i < route.points.length; i += 6) {
-                            if (Math.hypot(point.x - route.points[i].x, point.y - route.points[i].y) < 10) score += 10;
-                        }
-                    }
-                }
             });
             if (score < bestScore) { best = candidate; bestScore = score; }
         }
@@ -434,10 +426,8 @@
         ui.connections.setAttribute('viewBox', `0 0 ${ui.board.clientWidth} ${ui.board.clientHeight}`);
         ui['edge-layer'].replaceChildren();
         const geometry = routingGeometry();
-        const routes = [];
         session().edges.forEach(edge => {
-            const route = routeEdge(edge, geometry, routes);
-            routes.push(route);
+            const route = routeEdge(edge, geometry);
             const path = route.d;
             const group = document.createElementNS(svgNS, 'g');
             group.setAttribute('class', 'edge');
