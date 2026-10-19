@@ -1,5 +1,7 @@
 :root {
     color-scheme: dark;
+    /* Keep automatic darkening from recoloring the light states where supported. */
+    color-scheme: only dark;
     --navy: #1a365d;
     --muted: #bacade;
     --red: #ac4948;
@@ -44,6 +46,8 @@ h1 { font-size: 20px; line-height: 1.2; font-weight: 650; margin: 0; text-align:
 .nodes { z-index: 2; top: var(--play-top, 180px); bottom: var(--play-bottom, 100px); right: var(--help-space, 0px); width: auto; height: auto; }
 .tablet-node { position: absolute; transform: translate(-50%, -50%); width: 86px; text-align: center; pointer-events: none; color: #e3eaf2; }
 .node-light { width: 86px; height: 86px; display: block; margin: 0 auto 9px; border: 2px solid #8293a8; border-radius: 50%; background: radial-gradient(ellipse at 40% 20%, #3b5067 0%, #202e40 45%, #101b2a 100%); box-shadow: 0 5px 12px #0006, inset 0 2px 3px #ffffff26, inset 0 -5px 9px #0006; pointer-events: auto; position: relative; touch-action: none; user-select: none; cursor: grab; }
+/* Draw the lights entirely in CSS, without a native mobile button skin. */
+.node-light { -webkit-appearance: none; appearance: none; }
 .node-light::before { content: ''; position: absolute; top: 10%; left: 22%; width: 56%; height: 28%; border-radius: 50%; background: linear-gradient(#ffffff30, #ffffff00); pointer-events: none; }
 .node-light::after { content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
 .node-light.is-on { background: radial-gradient(circle at 48% 44%, #e0e7ef 0%, #cdd8e4 65%, #b7c7d8 100%); border-color: #d7e3ef; box-shadow: 0 4px 8px #00000038, 0 0 16px #d1dfed30, 0 0 32px #d1dfed50, inset 0 2px 3px #ffffff24, inset 0 -3px 5px #23375020; }
