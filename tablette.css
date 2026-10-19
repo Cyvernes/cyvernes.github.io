@@ -145,4 +145,6 @@ h3 { color: #e5edf8; font-size: 18px; margin: 0; }
     .help-panel .guide-card { padding: 16px; }
     .panel-controls { gap: 6px; }
     .panel-controls .dialog-close { padding: 8px; }
+    .help-panel:not(.is-expanded) .dialog-toolbar { padding-block: 4px; }
+    .help-panel:not(.is-expanded) .panel-controls .dialog-close { min-height: 24px; padding-block: 0; }
 }
