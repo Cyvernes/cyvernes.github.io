@@ -50,9 +50,19 @@
         </section>
         <aside id="help-panel" class="help-panel" aria-label="Aide du jeu" hidden>
             <div class="dialog-toolbar"><strong>Aide</strong><div class="panel-controls"><button type="button" id="expand-help" class="dialog-close" aria-expanded="false" aria-controls="help-content">Développer</button><button type="button" id="close-help" class="dialog-close" aria-label="Fermer l’aide">×</button></div></div>
-            <p class="help-summary">Double appui : changer de mode.<br>Glisser : tracer une flèche.</p>
+            <div class="help-summary">
+                <p class="help-objective"><strong>Objectif</strong> · Découvrir qui agit directement sur qui.</p>
+                <dl class="help-gestures" aria-label="Gestes essentiels">
+                    <div><dt>Double appui</dt><dd>Intervenir / rendre naturel</dd></div>
+                    <div><dt>Appui simple</dt><dd>Allumer / éteindre en intervention</dd></div>
+                    <div><dt>Glisser</dt><dd>Tracer une flèche</dd></div>
+                </dl>
+            </div>
                     <section id="help-content" class="guide-card" aria-labelledby="guide-title">
-                        <h3 id="guide-title">Le principe</h3>
+                        <h3 id="guide-title">L’objectif</h3>
+                        <p>Découvrez quels boutons agissent <strong>directement</strong> sur les autres. Intervenez sur les boutons, observez lesquels s’allument ou s’éteignent, puis tracez les flèches pour reconstituer les relations cachées.</p>
+                        <p>Quand vous pensez avoir trouvé toutes les relations directes, appuyez sur <strong>Vérifier mes flèches</strong>. Les flèches que vous dessinez sont vos hypothèses : elles ne modifient pas le fonctionnement des boutons.</p>
+                        <h3>Le principe</h3>
                         <p>Un bouton <strong>naturel</strong> réagit aux autres. En <strong>intervention</strong>, vous imposez son état : il ne suit plus ses causes.</p>
                         <div class="legend" aria-label="Couleur et éclairage des boutons">
                             <span><i class="legend-light natural-off" aria-hidden="true"></i><span>Gris : naturel</span></span>

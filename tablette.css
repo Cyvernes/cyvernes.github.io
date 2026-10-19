@@ -134,6 +134,12 @@ h3 { color: #e5edf8; font-size: 18px; margin: 0; }
     .help-panel { top: auto; bottom: var(--actions-space, 100px); left: 10px; right: 10px; width: auto; max-height: min(65dvh, 560px); }
     #expand-help { display: inline-flex; }
     .help-summary { display: block; font-size: 13px; line-height: 1.5; margin: 0; padding: 8px 16px 12px; }
+    .help-objective { margin: 0 0 10px; color: var(--muted); }
+    .help-objective strong { color: #e5edf8; }
+    .help-gestures { display: grid; gap: 6px; margin: 0; padding-top: 10px; border-top: 1px solid var(--line); }
+    .help-gestures > div { display: grid; grid-template-columns: 100px minmax(0, 1fr); column-gap: 12px; align-items: baseline; }
+    .help-gestures dt { font-weight: 650; color: #e5edf8; }
+    .help-gestures dd { margin: 0; color: var(--muted); }
     .help-panel.is-expanded .help-summary { display: none; }
     .help-panel .dialog-toolbar { padding: 6px 10px; }
     .help-panel .guide-card { padding: 16px; }
