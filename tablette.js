@@ -507,7 +507,7 @@
             const nextExercise = model.exercises[model.exercises.indexOf(activeExercise) + 1];
             detail.textContent = nextExercise ? 'Vous avez trouvé toutes les flèches.' : 'Vous avez terminé le dernier niveau !';
             const reflection = document.createElement('p');
-            reflection.textContent = 'Avez-vous bien testé toutes les possibilités ? On peut trouver le bon graphe avec un raisonnement incorrect. Vérifiez que vos essais permettent de justifier chaque flèche, ainsi que l’absence des autres.';
+            reflection.textContent = 'Êtes-vous sûr d’avoir tout testé ou avez-vous eu de la chance ?';
             ui.feedback.append(heading, detail, reflection);
             if (nextExercise) {
                 const next = document.createElement('button');

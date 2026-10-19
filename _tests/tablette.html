@@ -259,7 +259,7 @@
                 click('#check-edges');
                 assert(doc.querySelector('#feedback').classList.contains('is-correct'), `Correction incorrecte : ${exercise.id}`);
                 assert(Boolean(doc.querySelector('#next-level')) === (exercise !== model.exercises.at(-1)), 'Navigation incorrecte après réussite.');
-                assert(doc.querySelector('#feedback').textContent.includes('toutes les possibilités'), 'Invitation à vérifier le raisonnement absente.');
+                assert(doc.querySelector('#feedback').textContent.includes('Êtes-vous sûr d’avoir tout testé ou avez-vous eu de la chance ?'), 'Invitation à vérifier le raisonnement absente.');
                 click('#close-result');
             }
         });
