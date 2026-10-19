@@ -69,7 +69,7 @@ h1 { font-size: 20px; line-height: 1.2; font-weight: 650; margin: 0; text-align:
 .edge-line { fill: none; stroke: #a8c8ff; stroke-width: 2; pointer-events: none; }
 .edge-underlay { fill: none; stroke: #111f32; stroke-width: 6; pointer-events: none; }
 .edge-hit { fill: none; stroke: transparent; stroke-width: 24; pointer-events: stroke; cursor: pointer; }
-.edge:hover .edge-line { stroke: #f2b66d; stroke-width: 3; }
+.edge:hover .edge-line { stroke: #f2b66d; stroke-width: 3; marker-end: url(#arrow-draft); }
 .draft-edge { fill: none; stroke: #f2b66d; stroke-width: 2; stroke-dasharray: 6 5; pointer-events: none; }
 .tablet-actions { position: absolute; z-index: 4; bottom: max(16px, env(safe-area-inset-bottom)); left: calc((100% - var(--help-space, 0px)) / 2); transform: translateX(-50%); width: max-content; max-width: calc(100% - var(--help-space, 0px) - 32px); display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
 .reset-actions { display: flex; align-items: center; gap: 12px; }

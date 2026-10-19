@@ -104,7 +104,7 @@
         });
     }
 
-    function positions(exercise) {
+    function positions(exercise, width = 100, height = 100) {
         if (exercise.id === 'reseau') {
             // A neutral, fixed arrangement; never infer positions from edges.
             return { 0: [27, 17], 6: [73, 17], 14: [17, 50], 4: [50, 50], 13: [83, 50], 5: [27, 83], 12: [73, 83] };
@@ -115,9 +115,33 @@
         }
         if (exercise.nodes.length === 9) {
             // An odd ring leaves the centre free, without aligning three buttons.
+            // On desktop, size a 3:2 ellipse from the width and scale both radii
+            // together if height is limited. Keep the existing mobile proportions.
+            const radiusX = sideHelp.matches ? Math.min(width * .4, height * .6) : width * .4;
+            const radiusY = sideHelp.matches ? radiusX / 1.5 : height * .4;
+            const angles = exercise.nodes.map((_, index) => -Math.PI / 2 + index * 2 * Math.PI / exercise.nodes.length);
+            if (sideHelp.matches) {
+                // Equal arc lengths keep the desktop spacing even on a wide ellipse.
+                const steps = 720;
+                const lengths = [0];
+                let previous = { x: 0, y: -radiusY };
+                for (let step = 1; step <= steps; step++) {
+                    const angle = -Math.PI / 2 + step * 2 * Math.PI / steps;
+                    const point = { x: radiusX * Math.cos(angle), y: radiusY * Math.sin(angle) };
+                    lengths.push(lengths.at(-1) + Math.hypot(point.x - previous.x, point.y - previous.y));
+                    previous = point;
+                }
+                let step = 1;
+                angles.forEach((_, index) => {
+                    const target = lengths.at(-1) * index / angles.length;
+                    while (lengths[step] < target) step++;
+                    const fraction = (target - lengths[step - 1]) / (lengths[step] - lengths[step - 1]);
+                    angles[index] = -Math.PI / 2 + (step - 1 + fraction) * 2 * Math.PI / steps;
+                });
+            }
             return Object.fromEntries(exercise.nodes.map((id, index) => {
-                const angle = -Math.PI / 2 + index * 2 * Math.PI / exercise.nodes.length;
-                return [id, [50 + 40 * Math.cos(angle), 50 + 40 * Math.sin(angle)]];
+                const angle = angles[index];
+                return [id, [width / 2 + radiusX * Math.cos(angle), height / 2 + radiusY * Math.sin(angle)]];
             }));
         }
         const points = exercise.nodes.length === 2 ? [[30, 50], [70, 50]] : [[50, 25], [24, 75], [76, 75]];
@@ -304,9 +328,9 @@
         nodeElements.forEach(({ light }, id) => {
             const rect = light.getBoundingClientRect();
             const point = { x: rect.left + rect.width / 2 - board.left,
-                y: rect.top + rect.height / 2 - board.top, radius: rect.width / 2 + 12 };
+                y: rect.top + rect.height / 2 - board.top, radius: rect.width / 2 + 3 };
             lights.set(id, point);
-            obstacles.push({ ...point, radius: rect.width / 2 + 7 });
+            obstacles.push({ ...point, radius: rect.width / 2 + 2 });
         });
         // Keep some of the 18px margin to the floating controls available for
         // curves around the outermost lights.
@@ -327,6 +351,10 @@
     }
 
     function curvedRoute(from, to, control) {
+        // Keep a usable tangent at both ends: a control point too near the
+        // attachment circle makes the curve double back beside the arrowhead.
+        if (control && [from, to].some(point => Math.hypot(control.x - point.x, control.y - point.y) < point.radius + 16)) return null;
+        if (!control && Math.hypot(to.x - from.x, to.y - from.y) <= from.radius + to.radius) return null;
         const endpoint = (point, toward) => {
             const distance = Math.hypot(toward.x - point.x, toward.y - point.y) || 1;
             return { x: point.x + (toward.x - point.x) / distance * point.radius,
@@ -455,13 +483,18 @@
         let best = null;
         let bestScore = Infinity;
         for (const candidate of candidates) {
-            let score = 0;
-            candidate.points.forEach((point, index) => {
+            if (!candidate) continue;
+            const length = candidate.points.reduce((total, point, index) => index
+                ? total + Math.hypot(point.x - candidate.points[index - 1].x, point.y - candidate.points[index - 1].y) : total, 0);
+            // Keep a visible shaft behind the fixed 12px arrowhead. A short or
+            // reversed straight segment must take a curve around the buttons.
+            if (length < 28) continue;
+            let score = length;
+            candidate.points.forEach(point => {
                 if (!insideRoutingBounds(point, geometry)) score += 100000;
                 for (const obstacle of geometry.obstacles) {
                     if (insideObstacle(point, obstacle)) score += 100000;
                 }
-                if (index) score += Math.hypot(point.x - candidate.points[index - 1].x, point.y - candidate.points[index - 1].y);
             });
             if (score < bestScore) { best = candidate; bestScore = score; }
         }
@@ -493,6 +526,12 @@
             group.append(title, underlay, visible, hit);
             group.addEventListener('click', () => removeEdge(edge.from, edge.to));
             ui['edge-layer'].append(group);
+            // Stop the curved shaft inside the broad base of the 12px head,
+            // rather than letting it protrude beside the head near its tip.
+            const length = visible.getTotalLength();
+            const dash = `${Math.max(0, length - 10)} ${length}`;
+            visible.setAttribute('stroke-dasharray', dash);
+            underlay.setAttribute('stroke-dasharray', dash);
         });
     }
 
@@ -708,6 +747,16 @@
         app.style.setProperty('--game-min-height', `${top + bottom + playHeight}px`);
         app.style.setProperty('--play-top', `${top}px`);
         app.style.setProperty('--play-bottom', `${bottom}px`);
+        if (activeExercise.nodes.length === 9) {
+            const area = ui.nodes.getBoundingClientRect();
+            // Recompute the spacing using the actual aspect ratio of the play area.
+            const layout = positions(activeExercise, area.width, area.height);
+            activeExercise.nodes.forEach(id => {
+                const node = nodeElements.get(id).node;
+                node.style.left = `${layout[id][0]}px`;
+                node.style.top = `${layout[id][1]}px`;
+            });
+        }
         if (activeExercise.nodes.length === 3) {
             const area = ui.nodes.getBoundingClientRect();
             const nodeWidth = nodeElements.values().next().value.node.getBoundingClientRect().width;

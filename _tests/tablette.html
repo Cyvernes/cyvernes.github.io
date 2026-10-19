@@ -167,7 +167,13 @@
         const tap = id => light(id).dispatchEvent(new win.MouseEvent('click', { detail: 1, bubbles: true }));
         const doubleTap = id => { tap(id); tap(id); };
         const waitTap = () => new Promise(resolve => win.setTimeout(resolve, 370));
-        const settleLayout = () => new Promise(resolve => win.setTimeout(resolve, 60));
+        const settleLayout = () => new Promise(resolve => {
+            // Flush the iframe viewport before simulating resize: headless virtual
+            // time can deliver timers before the native iframe resize event.
+            frame.getBoundingClientRect();
+            win.dispatchEvent(new win.Event('resize'));
+            win.setTimeout(resolve, 60);
+        });
 
         await test('Interface : six onglets et aucune flèche révélée au démarrage', () => {
             assert(doc.querySelectorAll('[role="tab"]').length === 6, 'Onglets absents.');
@@ -501,6 +507,62 @@
                     }
                 }
             }
+        });
+        await test('Défi sur petit écran : flèches proches lisibles, orientées vers le bord du bouton', async () => {
+            click('#tab-daily');
+            click('#close-help');
+            click('#close-result');
+            const nodes = win.CausalTablet.exercises.find(exercise => exercise.id === 'daily').nodes;
+            for (const [width, height] of [[320, 667], [360, 740], [390, 844], [844, 390]]) {
+                frame.style.width = `${width}px`;
+                frame.style.height = `${height}px`;
+                click('#clear-edges');
+                await settleLayout();
+                for (let i = 0; i < nodes.length; i++) {
+                    const from = nodes[i], to = nodes[(i + 1) % nodes.length];
+                    light(to).scrollIntoView({ block: 'center' });
+                    for (const reciprocal of [false, true]) {
+                        if (reciprocal) draw(to, from);
+                        else draw(from, to);
+                        const board = doc.querySelector('#board').getBoundingClientRect();
+                        for (const [source, target] of reciprocal ? [[from, to], [to, from]] : [[from, to]]) {
+                            const path = doc.querySelector(`.edge[aria-label="Supprimer la flèche ${source} vers ${target}"] .edge-line`);
+                            assert(path, `Flèche proche absente : ${width}px, ${source} → ${target}.`);
+                            const length = path.getTotalLength();
+                            assert(length >= 24, `Flèche trop courte : ${width}px, ${source} → ${target}, ${length}px.`);
+                            const end = path.getPointAtLength(length);
+                            const before = path.getPointAtLength(length - .5);
+                            const rect = light(target).getBoundingClientRect();
+                            const dx = rect.left + rect.width / 2 - board.left - end.x;
+                            const dy = rect.top + rect.height / 2 - board.top - end.y;
+                            const distance = Math.hypot(dx, dy);
+                            const vx = end.x - before.x, vy = end.y - before.y;
+                            assert((vx * dx + vy * dy) / (Math.hypot(vx, vy) * distance) > .95,
+                                `Pointe dirigée à l’opposé du bouton : ${width}px, ${source} → ${target}.`);
+                            const headBase = path.getPointAtLength(length - 12);
+                            const hx = end.x - headBase.x, hy = end.y - headBase.y;
+                            assert((hx * dx + hy * dy) / (Math.hypot(hx, hy) * distance) > .8,
+                                `Demi-tour juste avant la pointe : ${width}px, ${source} → ${target}.`);
+                            assert(distance >= rect.width / 2 + 2 && distance <= rect.width / 2 + 5,
+                                `Pointe trop éloignée du bord : ${width}px, ${source} → ${target}.`);
+                            for (let at = 0; at <= length; at += 2) {
+                                const point = path.getPointAtLength(at);
+                                for (const button of doc.querySelectorAll('.node-light')) {
+                                    const bounds = button.getBoundingClientRect();
+                                    assert(Math.hypot(point.x + board.left - bounds.left - bounds.width / 2,
+                                        point.y + board.top - bounds.top - bounds.height / 2) > bounds.width / 2 + 1,
+                                        `Flèche sous un bouton : ${width}px, ${source} → ${target}.`);
+                                }
+                            }
+                        }
+                    }
+                    click('#clear-edges');
+                }
+            }
+            frame.style.width = '1100px';
+            frame.style.height = '800px';
+            await settleLayout();
+            win.scrollTo(0, 0);
         });
         await test('Chronos : indépendants, pause entre onglets, arrêt à la réussite et nouvelle partie', () => {
             const descriptor = Object.getOwnPropertyDescriptor(win.performance, 'now');
