@@ -65,6 +65,7 @@
                         <h3>Le principe</h3>
                         <p>Chaque bouton a éventuellement des « parents » : ce sont ses <strong>causes directes</strong>. Au naturel, il s’allume dès qu’au moins un de ses parents est allumé ; sinon, il reste éteint.</p>
                         <p>En <strong>intervention</strong>, vous coupez l’influence de ses parents et imposez son état. Il continue cependant d’agir sur les boutons dont il est lui-même parent.</p>
+                        <p><strong>Un bouton blanc peut allumer un autre bouton blanc.</strong> C’est son état <strong>allumé</strong> qui agit sur les suivants, qu’il soit naturel ou en intervention. Le rouge et le verrou indiquent seulement que vous imposez son état : un bouton rouge peut être allumé ou éteint.</p>
                         <div class="legend" aria-label="Couleur et éclairage des boutons">
                             <span><i class="legend-light natural-off" aria-hidden="true"></i><span>Gris : naturel</span></span>
                             <span><svg class="legend-symbol" width="12" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><span>Rouge et verrou : intervention</span></span>
@@ -85,10 +86,11 @@
                             <summary>Les astuces</summary>
                             <p id="exercise-description"></p>
                             <ul>
-                                <li>Maintenir un bouton <strong>éteint en intervention</strong> permet de bloquer les chemins qui passent par lui. Observez les effets qui disparaissent et ceux qui persistent : ils peuvent passer par d’autres chemins.</li>
-                                <li>La position des boutons ne donne aucun indice sur les relations.</li>
-                                <li>Dans ce jeu, les graphes suivent le modèle classique des graphes causaux sans cycle : aucune suite de flèches ne peut revenir à son point de départ.</li>
-                                <li>Chaque exercice est indépendant ; vos essais sont conservés quand vous changez d’onglet.</li>
+                                <li><strong>Influences directes et indirectes.</strong> Elles peuvent se combiner. Maintenez un bouton éteint en intervention pour bloquer l’influence qui passe par lui, puis observez les effets qui disparaissent ou persistent.</li>
+                                <li><strong>Causes multiples.</strong> Un bouton peut avoir plusieurs causes : une seule allumée suffit à l’allumer. Testez chaque cause possible séparément, en maintenant les autres éteintes en intervention et en laissant le bouton observé naturel. Vous éviterez ainsi qu’une cause masque l’effet d’une autre.</li>
+                                <li><strong>Position des boutons.</strong> Leur disposition ne donne aucun indice sur les relations à découvrir.</li>
+                                <li><strong>Absence de cycles.</strong> Dans ce jeu, aucune suite de flèches ne peut revenir à son point de départ.</li>
+                                <li><strong>Essais conservés.</strong> Chaque exercice est indépendant ; vous retrouvez vos essais en revenant sur son onglet.</li>
                             </ul>
                         </details>
                     </section>
