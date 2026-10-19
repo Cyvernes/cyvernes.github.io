@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><title>Tests de la tablette causale</title><script src="../tablette-model.js"></script></head>
+<body>
+    <h1>Tests de la tablette causale</h1>
+    <pre id="results">En cours…</pre>
+    <iframe id="app" src="../tablette.html" title="Page testée" style="width:1100px;height:1400px;border:0"></iframe>
+    <script>
+    /* Open through a static HTTP server. _tests is excluded by Jekyll. */
+    (async function () {
+        'use strict';
+        const results = document.getElementById('results');
+        const messages = [];
+        let passed = 0;
+        let failed = 0;
+        function assert(condition, message) { if (!condition) throw new Error(message); }
+        async function test(name, callback) {
+            try { await callback(); passed++; messages.push(`PASS ${name}`); }
+            catch (error) { failed++; messages.push(`FAIL ${name}: ${error.message}`); }
+            results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;
+        }
+        const model = window.CausalTablet;
+        const source = await fetch('../code_arduino.ino').then(response => {
+            assert(response.ok, 'Le code Arduino doit être disponible pour la comparaison.');
+            return response.text();
+        });
+        function readArray(name) {
+            const match = source.match(new RegExp(name + '\\s*\\[[^\\]]*\\]\\s*=\\s*\\{([\\s\\S]*?)\\}'));
+            assert(match, `Tableau Arduino absent : ${name}`);
+            return match[1].replace(/\/\/[^\r\n]*/g, '').split(',').map(value => value.trim()).filter(Boolean).map(Number);
+        }
+        const data = readArray('graphData');
+        const index = readArray('graphIndex');
+        const parents = index.map(start => data.slice(start + 1, start + 1 + data[start]));
+        const order = [];
+        const remaining = new Set(index.map((_, id) => id));
+        while (remaining.size) {
+            const ready = [...remaining].filter(id => parents[id].every(parent => !remaining.has(parent)));
+            assert(ready.length, 'Cycle dans le code Arduino.');
+            ready.forEach(id => { order.push(id); remaining.delete(id); });
+        }
+        await test('Les données reproduisent exactement les tableaux Arduino', () => {
+            assert(JSON.stringify(parents) === JSON.stringify(model.parents), 'Parents différents.');
+            assert(/buttonDefaultStates[^=]*=\s*\{\s*(?:false[\s,]*){15}\}/.test(source), 'Valeurs initiales à mettre à jour.');
+        });
+        await test('Les quatre exercices sont les composantes indépendantes du graphe', () => {
+            const seen = model.exercises.flatMap(exercise => exercise.nodes);
+            assert(seen.length === 15 && new Set(seen).size === 15, 'Chaque bouton doit appartenir à un seul exercice.');
+            model.exercises.forEach(exercise => exercise.nodes.forEach(id => {
+                assert(parents[id].every(parent => exercise.nodes.includes(parent)), 'Parent extérieur à l’exercice.');
+            }));
+        });
+        await test('2250 configurations : mêmes états que la boucle Arduino', () => {
+            let configurations = 0;
+            for (const exercise of model.exercises) {
+                for (let combination = 0; combination < 3 ** exercise.nodes.length; combination++) {
+                    const states = model.createNodeStates(exercise);
+                    const physical = Array.from({ length: 15 }, () => ({ isOn: false, isInterv: false }));
+                    let encoded = combination;
+                    exercise.nodes.forEach(id => {
+                        const state = encoded % 3;
+                        encoded = Math.floor(encoded / 3);
+                        states[id] = { isInterv: state !== 0, isOn: state === 2 };
+                        physical[id] = { ...states[id] };
+                    });
+                    for (const id of order) {
+                        if (!physical[id].isInterv) physical[id].isOn = parents[id].some(parent => physical[parent].isOn);
+                    }
+                    const calculated = model.evaluate(exercise, states);
+                    exercise.nodes.forEach(id => assert(JSON.stringify(calculated[id]) === JSON.stringify(physical[id]), `Exercice ${exercise.id}, configuration ${combination}, bouton ${id}.`));
+                    configurations++;
+                }
+            }
+            assert(configurations === 2250, `Nombre inattendu : ${configurations}`);
+        });
+        await test('Une intervention conserve la valeur présente, puis coupe ses causes', () => {
+            const exercise = model.exercises[2];
+            let states = model.createNodeStates(exercise);
+            states = model.toggleIntervention(exercise, states, 1);
+            states = model.toggleValue(exercise, states, 1);
+            assert(states[3].isOn && states[2].isOn, 'La chaîne doit s’allumer.');
+            states = model.toggleIntervention(exercise, states, 3);
+            assert(states[3].isOn, 'Entrer en intervention doit conserver la valeur.');
+            states = model.toggleValue(exercise, states, 3);
+            assert(!states[3].isOn && !states[2].isOn && states[1].isOn, 'Forcer le milieu à zéro doit couper la propagation.');
+            states = model.toggleIntervention(exercise, states, 3);
+            assert(states[3].isOn && states[2].isOn, 'Le retour au naturel doit rétablir la propagation.');
+        });
+        await test('Un clic simple ne change pas un bouton naturel', () => {
+            const exercise = model.exercises[0];
+            const states = model.createNodeStates(exercise);
+            assert(model.toggleValue(exercise, states, 7) === states, 'Le clic naturel doit rester sans effet.');
+        });
+        await test('La correction exige exactement les arêtes directes orientées', () => {
+            for (const exercise of model.exercises) {
+                const correct = exercise.nodes.flatMap(to => parents[to].map(from => ({ from, to })));
+                assert(model.checkEdges(exercise, correct).correct, 'Bonne solution refusée.');
+                assert(model.checkEdges(exercise, correct.slice(1)).missing === 1, 'Arête manquante non détectée.');
+                const reversed = correct.map(({ from, to }) => ({ from: to, to: from }));
+                assert(!model.checkEdges(exercise, reversed).correct, 'Orientation inverse acceptée.');
+                assert(model.checkEdges(exercise, [...correct, { from: correct[0].to, to: correct[0].from }]).extra === 1, 'Arête de trop non détectée.');
+            }
+        });
+
+        const frame = document.getElementById('app');
+        if (!frame.contentDocument.querySelector('.node-light')) await new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
+        const doc = frame.contentDocument;
+        const win = frame.contentWindow;
+        const click = selector => { const element = doc.querySelector(selector); assert(element, `Élément absent : ${selector}`); element.dispatchEvent(new win.MouseEvent('click', { bubbles: true })); };
+        const light = id => doc.querySelector(`.node-light[data-node="${id}"]`);
+        const isOn = id => light(id).classList.contains('is-on');
+        const isInterv = id => light(id).classList.contains('is-intervention');
+        const draw = (from, to) => {
+            const start = light(from).getBoundingClientRect();
+            const end = light(to).getBoundingClientRect();
+            const pointer = (type, rect) => new win.PointerEvent(type, {
+                clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2,
+                bubbles: true, pointerId: 1, button: 0, isPrimary: true
+            });
+            light(from).dispatchEvent(pointer('pointerdown', start));
+            doc.dispatchEvent(pointer('pointermove', end));
+            doc.dispatchEvent(pointer('pointerup', end));
+        };
+        const tap = id => light(id).dispatchEvent(new win.MouseEvent('click', { detail: 1, bubbles: true }));
+        const doubleTap = id => { tap(id); tap(id); };
+        const waitTap = () => new Promise(resolve => win.setTimeout(resolve, 370));
+        const settleLayout = () => new Promise(resolve => win.setTimeout(resolve, 60));
+
+        await test('Interface : quatre onglets et aucune flèche révélée au démarrage', () => {
+            assert(doc.querySelectorAll('[role="tab"]').length === 4, 'Onglets absents.');
+            assert(doc.querySelectorAll('.node-light').length === 2, 'Mauvais premier exercice.');
+            assert(doc.querySelectorAll('.edge').length === 0, 'Une arête est révélée.');
+            assert(doc.querySelector('#first-steps').dataset.step === 'intervention', 'Premier geste non expliqué.');
+            assert(!doc.querySelector('#board-stats') && !doc.querySelector('#button-count'), 'Compteurs encore présents.');
+        });
+        await test('Interface : intervenir, allumer et bloquer un effet', () => {
+            doubleTap(8);
+            assert(isInterv(8) && !isOn(8), 'Intervention initiale incorrecte.');
+            assert(doc.querySelector('#first-steps').dataset.step === 'value', 'Appui simple non expliqué.');
+            light(8).click();
+            assert(isOn(8) && isOn(7) && !isInterv(7), 'Propagation absente.');
+            assert(doc.querySelector('#first-steps').dataset.step === 'arrow', 'Tracé non expliqué.');
+            doubleTap(7);
+            assert(isOn(7) && isInterv(7), 'La valeur doit rester allumée.');
+            light(7).click();
+            assert(isOn(8) && !isOn(7), 'Intervention éteinte non respectée.');
+        });
+        await test('Interface : double-clic fidèle au changement de mode Arduino', () => {
+            doubleTap(7);
+            assert(!isInterv(7) && isOn(7), 'Retour au naturel incorrect.');
+            doubleTap(7);
+            assert(isInterv(7) && isOn(7), 'Entrée en intervention incorrecte.');
+        });
+        await test('Interface : appui simple et double appui tactile sans changement parasite', async () => {
+            const before = isOn(7);
+            tap(7);
+            await waitTap();
+            assert(isOn(7) !== before, 'Appui simple sans effet.');
+            doubleTap(7);
+            await waitTap();
+            assert(!isInterv(7) && isOn(7), 'Retour au naturel avec appui parasite.');
+            doubleTap(7);
+            await waitTap();
+            assert(isInterv(7) && isOn(7), 'Entrée en intervention avec appui parasite.');
+            assert(!doc.querySelector('#mode-draw'), 'Sélecteur de mode encore présent.');
+        });
+        await test('Interface : dessin par glisser-déposer et hypothèse sans effet sur les lumières', () => {
+            const before = light(7).className;
+            draw(7, 8);
+            assert(doc.querySelectorAll('.edge').length === 1, 'Flèche absente.');
+            assert(doc.querySelector('#first-steps').hidden, 'Guide encore présent après découverte des gestes.');
+            assert(light(7).className === before, 'Une hypothèse change les lumières.');
+            click('#check-edges');
+            assert(!doc.querySelector('#feedback').hidden && !doc.querySelector('#feedback').classList.contains('is-correct'), 'Mauvais graphe accepté.');
+            assert(!doc.querySelector('#result-panel').hidden, 'Résultat intégré non affiché.');
+            click('#close-result');
+        });
+        await test('Interface : doublons évités, arêtes réciproques distinctes et suppression', () => {
+            draw(7, 8);
+            assert(doc.querySelectorAll('.edge').length === 1, 'Doublon créé.');
+            draw(8, 7);
+            const paths = [...doc.querySelectorAll('.edge-line')].map(path => path.getAttribute('d'));
+            assert(paths.length === 2 && paths.every(path => path.includes('Q')), 'Les arêtes réciproques doivent être courbes.');
+            click('.edge[aria-label="Supprimer la flèche 7 vers 8"]');
+            assert(doc.querySelectorAll('.edge').length === 1, 'Suppression échouée.');
+            click('#check-edges');
+            assert(doc.querySelector('#feedback').classList.contains('is-correct'), 'Bonne solution non reconnue.');
+        });
+        await test('Interface : niveau suivant et retour aux essais précédents', () => {
+            assert(doc.querySelector('#next-level'), 'Passage au niveau suivant absent.');
+            click('#next-level');
+            assert(doc.querySelector('#tab-trio-1').getAttribute('aria-selected') === 'true', 'Mauvais niveau sélectionné.');
+            click('#tab-duo');
+            assert(doc.querySelectorAll('.edge').length === 1 && isInterv(7), 'Essais oubliés au changement de niveau.');
+        });
+        await test('Interface : reset des boutons conservant les flèches', () => {
+            click('#reset-buttons');
+            assert(!isOn(7) && !isOn(8) && !isInterv(7) && !isInterv(8), 'Reset incomplet.');
+            assert(doc.querySelectorAll('.edge').length === 1, 'Le reset efface l’hypothèse.');
+        });
+        await test('Interface : seul le verrou indique une intervention, sans commandes sous les lumières', async () => {
+            await new Promise(resolve => win.setTimeout(resolve, 410));
+            assert(!doc.querySelector('.node-mode, .node-state'), 'Commande ou libellé encore présent.');
+            const lock = light(7).querySelector('.intervention-symbol');
+            assert(win.getComputedStyle(lock).display === 'none', 'Verrou présent au naturel.');
+            doubleTap(7);
+            assert(isInterv(7) && win.getComputedStyle(lock).display !== 'none', 'Verrou absent en intervention.');
+            light(7).click();
+            assert(isOn(7) && win.getComputedStyle(lock).display !== 'none', 'Verrou perdu à l’allumage.');
+            doubleTap(7);
+            assert(!isInterv(7) && win.getComputedStyle(lock).display === 'none', 'Verrou conservé au retour naturel.');
+        });
+        await test('Interface : aide visible quand on appuie sur un bouton naturel', () => {
+            light(7).click();
+            assert(!doc.querySelector('#first-steps').hidden && doc.querySelector('#first-steps').textContent.includes('naturel'), 'Appui naturel sans explication visible.');
+            doubleTap(7);
+            assert(doc.querySelector('#first-steps').hidden, 'Rappel conservé après intervention.');
+            click('#reset-buttons');
+        });
+        await test('Interface : exercices indépendants et essais conservés entre onglets', () => {
+            click('#tab-trio-1');
+            assert(doc.querySelectorAll('.node-light').length === 3 && doc.querySelectorAll('.edge').length === 0, 'Exercice non indépendant.');
+            doubleTap(10); light(10).click();
+            assert(isOn(9) && isOn(10) && !isOn(11), 'OU du collider incorrect.');
+            click('#tab-duo');
+            assert(doc.querySelectorAll('.edge').length === 1, 'Flèche du duo oubliée.');
+            click('#tab-trio-1');
+            assert(isOn(10) && isInterv(10), 'État du trio oublié.');
+        });
+        await test('Interface : raccourcis clavier retirés', () => {
+            doc.querySelector('#tab-trio-1').dispatchEvent(new win.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+            assert(doc.querySelector('#tab-trio-1').getAttribute('aria-selected') === 'true', 'Raccourci d’onglet encore actif.');
+            click('#tab-trio-2');
+            light(1).dispatchEvent(new win.KeyboardEvent('keydown', { key: ' ', shiftKey: true, bubbles: true }));
+            light(1).dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true }));
+            assert(!isInterv(1) && !doc.querySelector('.is-source'), 'Raccourci de bouton encore actif.');
+        });
+        await test('Interface : véritable chemin du glisser-déposer et aperçu de flèche', () => {
+            const from = light(1).getBoundingClientRect();
+            const to = light(2).getBoundingClientRect();
+            const start = { clientX: from.left + from.width / 2, clientY: from.top + from.height / 2 };
+            const end = { clientX: to.left + to.width / 2, clientY: to.top + to.height / 2 };
+            light(1).dispatchEvent(new win.PointerEvent('pointerdown', { ...start, bubbles: true, pointerId: 1, button: 0, isPrimary: true }));
+            doc.dispatchEvent(new win.PointerEvent('pointermove', { ...end, bubbles: true, pointerId: 1 }));
+            assert(!doc.querySelector('#draft-edge').hasAttribute('hidden'), 'Aperçu invisible.');
+            doc.dispatchEvent(new win.PointerEvent('pointerup', { ...end, bubbles: true, pointerId: 1 }));
+            assert(doc.querySelectorAll('.edge').length === 1, 'Flèche non créée par glisser-déposer.');
+            assert(doc.querySelector('#draft-edge').hasAttribute('hidden'), 'Aperçu non retiré.');
+        });
+        await test('Interface : correction et remise à zéro de chaque exercice', async () => {
+            for (const exercise of model.exercises) {
+                click(`#tab-${exercise.id}`);
+                click('#reset-buttons');
+                assert([...doc.querySelectorAll('.node-light')].every(button => !button.classList.contains('is-on') && !button.classList.contains('is-intervention')), 'Reset incomplet.');
+                click('#clear-edges');
+                // Wait out the suppression of the synthetic post-drag click.
+                await new Promise(resolve => win.setTimeout(resolve, 410));
+                exercise.nodes.forEach(to => parents[to].forEach(from => draw(from, to)));
+                click('#check-edges');
+                assert(doc.querySelector('#feedback').classList.contains('is-correct'), `Correction incorrecte : ${exercise.id}`);
+                assert(Boolean(doc.querySelector('#next-level')) === (exercise !== model.exercises.at(-1)), 'Navigation incorrecte après réussite.');
+                assert(doc.querySelector('#feedback').textContent.includes('toutes les possibilités'), 'Invitation à vérifier le raisonnement absente.');
+                click('#close-result');
+            }
+        });
+        await test('Interface : aucun débordement ni bouton masqué à 360 px', async () => {
+            frame.style.width = '360px';
+            await settleLayout();
+            assert(doc.documentElement.scrollWidth <= 360, `Débordement : ${doc.documentElement.scrollWidth}px`);
+            const board = doc.querySelector('#board').getBoundingClientRect();
+            const lights = [...doc.querySelectorAll('.node-light')].map(button => button.getBoundingClientRect());
+            for (const rect of lights) assert(rect.left >= board.left && rect.right <= board.right && rect.top >= board.top && rect.bottom <= board.bottom, 'Lumière hors de la tablette.');
+            for (let i = 0; i < lights.length; i++) for (let j = i + 1; j < lights.length; j++) {
+                const a = lights[i], b = lights[j];
+                assert(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top, 'Lumières superposées.');
+            }
+        });
+        await test('Téléphone : niveaux jouables de 320 à 390 px et en paysage', async () => {
+            for (const [width, height] of [[320, 667], [360, 740], [390, 844], [844, 390]]) {
+                frame.style.width = `${width}px`;
+                frame.style.height = `${height}px`;
+                for (const exercise of model.exercises) {
+                    click(`#tab-${exercise.id}`);
+                    await settleLayout();
+                    assert(doc.documentElement.scrollWidth <= width, `Débordement à ${width}px, ${exercise.id}.`);
+                    const board = doc.querySelector('#board').getBoundingClientRect();
+                    assert(board.width >= width - 16 && board.height >= height, 'Plateau trop petit.');
+                    const hud = doc.querySelector('#game-hud').getBoundingClientRect();
+                    const actions = doc.querySelector('.tablet-actions').getBoundingClientRect();
+                    const controls = [...doc.querySelectorAll('.node-light')].map(button => button.getBoundingClientRect());
+                    const area = doc.querySelector('#nodes').getBoundingClientRect();
+                    const centreX = controls.reduce((sum, rect) => sum + rect.left + rect.width / 2, 0) / controls.length;
+                    const centreY = controls.reduce((sum, rect) => sum + rect.top + rect.height / 2, 0) / controls.length;
+                    assert(Math.abs(centreX - area.left - area.width / 2) < 1 && Math.abs(centreY - area.top - area.height / 2) < 1,
+                        `Voyants mal centrés à ${width}px : ${exercise.id}.`);
+                    for (const rect of controls) {
+                        assert(rect.width >= 44 && rect.height >= 44, 'Commande tactile trop petite.');
+                        assert(rect.left >= board.left && rect.right <= board.right && rect.top >= board.top && rect.bottom <= board.bottom, 'Commande hors du plateau.');
+                        assert(rect.top >= hud.bottom && rect.bottom <= actions.top, `Commande masquée à ${width}×${height}, ${exercise.id} : bouton ${rect.top}–${rect.bottom}, zone ${hud.bottom}–${actions.top}.`);
+                    }
+                    for (let i = 0; i < controls.length; i++) for (let j = i + 1; j < controls.length; j++) {
+                        const a = controls[i], b = controls[j];
+                        assert(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top, `Commandes superposées à ${width}×${height}, ${exercise.id}, ${i}/${j}: ${JSON.stringify(a)} / ${JSON.stringify(b)}.`);
+                    }
+                    click('#clear-edges');
+                    doc.querySelector('#board').scrollIntoView({ block: 'center' });
+                    draw(exercise.nodes[0], exercise.nodes[1]);
+                    assert(doc.querySelectorAll('.edge').length === 1, 'Tracé impossible sur téléphone.');
+                }
+            }
+        });
+        await test('Aide : panneau refermable sans perdre les essais', () => {
+            const before = doc.querySelectorAll('.edge').length;
+            click('#open-help');
+            assert(!doc.querySelector('#help-panel').hidden, 'Aide inaccessible.');
+            assert(doc.querySelector('#help-panel').scrollHeight >= doc.querySelector('#help-panel').clientHeight, 'Aide non défilable.');
+            click('#close-help');
+            assert(doc.querySelector('#help-panel').hidden && doc.querySelectorAll('.edge').length === before, 'Fermer l’aide perd les essais.');
+        });
+        await test('Réseau : flèches courbes sans traverser les lumières ou leurs commandes', async () => {
+            const pairs = [[14, 13], [0, 5], [6, 12], [0, 12], [6, 5], [4, 0], [4, 12], [14, 5], [13, 6],
+                [13, 14], [5, 0], [12, 6], [12, 0], [5, 6]];
+            for (const [width, height] of [[320, 667], [390, 844], [1100, 800]]) {
+                frame.style.width = `${width}px`;
+                frame.style.height = `${height}px`;
+                click('#tab-reseau');
+                click('#clear-edges');
+                await settleLayout();
+                for (const [from, to] of pairs) {
+                    light(to).scrollIntoView({ block: 'center' });
+                    draw(from, to);
+                    await settleLayout();
+                }
+                assert(doc.querySelectorAll('.edge').length === pairs.length, 'Flèches perdues pendant le tracé.');
+                for (const [from, to] of pairs.slice(0, 5)) {
+                    const forward = doc.querySelector(`.edge[aria-label="Supprimer la flèche ${from} vers ${to}"] .edge-line`);
+                    const reverse = doc.querySelector(`.edge[aria-label="Supprimer la flèche ${to} vers ${from}"] .edge-line`);
+                    const reversePoints = Array.from({ length: 101 }, (_, i) => reverse.getPointAtLength(reverse.getTotalLength() * i / 100));
+                    let overlap = 0;
+                    for (let i = 0; i <= 20; i++) {
+                        const point = forward.getPointAtLength(forward.getTotalLength() * (.15 + .7 * i / 20));
+                        if (reversePoints.some(other => Math.hypot(point.x - other.x, point.y - other.y) < 6)) overlap++;
+                    }
+                    assert(overlap <= 3, `Flèches réciproques superposées à ${width}px : ${from} ↔ ${to}.`);
+                }
+                const board = doc.querySelector('#board').getBoundingClientRect();
+                const lights = [...doc.querySelectorAll('.node-light')].map(button => button.getBoundingClientRect());
+                const controls = [];
+                for (const path of doc.querySelectorAll('.edge-line')) {
+                    const length = path.getTotalLength();
+                    for (let at = 0; at <= length; at += 3) {
+                        const point = path.getPointAtLength(at);
+                        const x = point.x + board.left, y = point.y + board.top;
+                        for (const rect of lights) {
+                            assert(Math.hypot(x - rect.left - rect.width / 2, y - rect.top - rect.height / 2) > rect.width / 2 + 2,
+                                `Flèche sous un voyant à ${width}px : ${path.parentNode.getAttribute('aria-label')}.`);
+                        }
+                        for (const rect of controls) {
+                            assert(!(x > rect.left - 2 && x < rect.right + 2 && y > rect.top - 2 && y < rect.bottom + 2),
+                                `Flèche sous une commande à ${width}px : ${path.parentNode.getAttribute('aria-label')}, ${path.getAttribute('d')}, obstacle ${JSON.stringify(rect)}, point ${x},${y}.`);
+                        }
+                    }
+                }
+            }
+        });
+        await test('Réseau : jouer avec l’aide ouverte sur ordinateur et téléphone', async () => {
+            click('#tab-reseau');
+            await new Promise(resolve => win.setTimeout(resolve, 410));
+            doubleTap(0);
+            for (const [width, height] of [[1100, 800], [1440, 900], [320, 667], [390, 844], [844, 390]]) {
+                frame.style.width = `${width}px`;
+                frame.style.height = `${height}px`;
+                if (doc.querySelector('#help-panel').hidden) click('#open-help');
+                await settleLayout();
+                assert(doc.documentElement.scrollWidth <= width, `Aide provoquant un débordement à ${width}px : ${doc.documentElement.scrollWidth}px.`);
+                const help = doc.querySelector('#help-panel').getBoundingClientRect();
+                for (const button of doc.querySelectorAll('.node-light')) {
+                    const rect = button.getBoundingClientRect();
+                    assert(rect.right <= help.left || rect.left >= help.right || rect.bottom <= help.top || rect.top >= help.bottom,
+                        `Aide masquant un voyant à ${width}px.`);
+                }
+                const before = isOn(0);
+                light(0).click();
+                assert(isOn(0) !== before, 'Manipulation impossible avec l’aide ouverte.');
+                click('#clear-edges');
+                light(13).scrollIntoView({ block: 'center' });
+                draw(14, 13);
+                assert(doc.querySelectorAll('.edge').length === 1, 'Tracé impossible avec l’aide ouverte.');
+                if (width < 1000) {
+                    click('#expand-help');
+                    assert(!doc.querySelector('#help-content').hidden, 'Aide détaillée inaccessible.');
+                    click('#expand-help');
+                    assert(doc.querySelector('#help-content').hidden, 'Aide impossible à réduire.');
+                }
+                click('#check-edges');
+                await settleLayout();
+                assert(!doc.querySelector('#result-panel').hidden && !doc.querySelector('dialog[open]'), 'Résultat bloquant le jeu.');
+                if (width < 1000) assert(doc.querySelector('#help-panel').hidden, 'Aide et résultat empilés sur téléphone.');
+                else assert(!doc.querySelector('#help-panel').hidden, 'Aide fermée sur ordinateur.');
+                light(0).click();
+                assert(isOn(0) === before, 'Jeu bloqué par le résultat.');
+                click('#close-result');
+            }
+            click('#close-help');
+        });
+        document.body.dataset.testStatus = failed ? 'failed' : 'passed';
+        results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;
+    })().catch(error => {
+        document.body.dataset.testStatus = 'failed';
+        document.getElementById('results').textContent += `\nFATAL ${error.stack}`;
+    });
+    </script>
+</body>
+</html>
