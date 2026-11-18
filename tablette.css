@@ -120,6 +120,9 @@ h3 { color: #e5edf8; font-size: 18px; margin: 0; }
     .first-steps { font-size: 13px; padding: 8px 12px; }
     .tablet-node { width: 60px; }
     .node-light { width: 60px; height: 60px; font-size: 20px; }
+    .nodes[data-count="12"] { --light-size: clamp(48px, 13vw, 60px); }
+    .nodes[data-count="12"] :is(.tablet-node, .node-light) { width: var(--light-size); }
+    .nodes[data-count="12"] .node-light { height: var(--light-size); }
     .tablet-actions { width: calc(100% - 20px); max-width: none; padding: 8px 10px; gap: 4px; flex-direction: column-reverse; bottom: max(10px, env(safe-area-inset-bottom)); }
     .check-button { width: 100%; }
     .reset-actions { width: 100%; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; }

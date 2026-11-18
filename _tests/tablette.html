@@ -518,6 +518,11 @@
                         const actions = doc.querySelector('.tablet-actions').getBoundingClientRect();
                         const help = doc.querySelector('#help-panel').getBoundingClientRect();
                         const lights = [...doc.querySelectorAll('.node-light')].map(button => button.getBoundingClientRect());
+                        if (count === 12 && width <= 390) {
+                            const expected = Math.max(48, width * .13);
+                            assert(lights.every(rect => Math.abs(rect.width - expected) < .1 && rect.width === rect.height),
+                                `Les voyants ne s’adaptent pas à la largeur de ${width}px.`);
+                        }
                         for (const rect of lights) {
                             assert(rect.left >= 0 && rect.right <= width && rect.top >= hud.bottom && rect.bottom <= actions.top, `Bouton masqué : ${id}, ${width}px, aide ${open}, voyant ${JSON.stringify(rect)}, haut ${hud.bottom}, bas ${actions.top}.`);
                             if (open) assert(rect.right <= help.left || rect.left >= help.right || rect.bottom <= help.top || rect.top >= help.bottom, `Aide masquant un bouton : ${id}, ${width}px.`);
@@ -641,15 +646,40 @@
                 else delete win.performance.now;
             }
         });
-        await test('Défi du jour : premier lancement conservé après rechargement', async () => {
+        await test('Défi du jour : départ au premier geste et reprise après rechargement', async () => {
             const seed = win.CausalTablet.daySeed();
             const key = `tablette.daily.startedAt.${seed}`;
+            const reload = async () => {
+                const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
+                win.location.reload();
+                await loaded;
+                return frame.contentDocument;
+            };
+            win.localStorage.removeItem(key);
+            const fresh = await reload();
+            const hint = fresh.querySelector('#first-steps');
+            assert(hint.hidden && !hint.textContent, 'Le guide apparaît après une visite récente.');
+            const openedAt = win.Date.now();
+            let now = openedAt;
+            win.Date.now = () => now;
+            fresh.querySelector('#tab-daily').click();
+            now += 15000;
+            fresh.querySelector('#open-help').click();
+            assert(!fresh.querySelector('#help-panel').hidden, 'Le bouton Aide ne fonctionne plus.');
+            fresh.querySelector('#close-help').click();
+            fresh.querySelector('#tab-duo').click();
+            fresh.querySelector('#tab-daily').click();
+            assert(fresh.querySelector('#exercise-timer').textContent === '00:00' && win.localStorage.getItem(key) === null,
+                'Le chrono a démarré sans interaction avec le graphe.');
+            fresh.querySelector('.node-light').dispatchEvent(new win.PointerEvent('pointerdown', { bubbles: true, isPrimary: true }));
             const startedAt = Number(win.localStorage.getItem(key));
-            assert(startedAt > 0, 'Le premier lancement n’a pas été enregistré.');
-            const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
-            win.location.reload();
-            await loaded;
-            const reloaded = frame.contentDocument;
+            assert(startedAt === now, 'Le premier appui n’a pas démarré le chrono.');
+            const visitKey = 'tablette.lastVisit';
+            const olderVisit = openedAt - 7 * 24 * 60 * 60 * 1000;
+            win.localStorage.setItem(visitKey, String(olderVisit));
+            const reloaded = await reload();
+            assert(!reloaded.querySelector('#first-steps').hidden, 'Le guide ne revient pas après une semaine.');
+            assert(Number(win.localStorage.getItem(visitKey)) > olderVisit, 'La date de la dernière visite n’a pas été actualisée.');
             const dateNow = win.Date.now;
             win.Date.now = () => startedAt + 67000;
             try {
@@ -659,21 +689,6 @@
             } finally {
                 win.Date.now = dateNow;
             }
-        });
-        await test('Aide automatique : masquée en cas de visite récente et rétablie après une semaine', async () => {
-            const reloaded = frame.contentDocument;
-            const hint = reloaded.querySelector('#first-steps');
-            assert(hint.hidden && !hint.textContent, 'Le guide apparaît après une visite récente.');
-            reloaded.querySelector('#open-help').click();
-            assert(!reloaded.querySelector('#help-panel').hidden, 'Le bouton Aide ne fonctionne plus.');
-            const key = 'tablette.lastVisit';
-            const olderVisit = win.Date.now() - 7 * 24 * 60 * 60 * 1000;
-            win.localStorage.setItem(key, String(olderVisit));
-            const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
-            win.location.reload();
-            await loaded;
-            assert(!frame.contentDocument.querySelector('#first-steps').hidden, 'Le guide ne revient pas après une semaine.');
-            assert(Number(win.localStorage.getItem(key)) > olderVisit, 'La date de la dernière visite n’a pas été actualisée.');
         });
         document.body.dataset.testStatus = failed ? 'failed' : 'passed';
         results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;

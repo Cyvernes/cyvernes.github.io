@@ -54,27 +54,29 @@
         current.startedAt = null;
     }
 
-    function dailyStart(seed, now) {
+    function dailyStart(seed, now = null) {
         const key = `tablette.daily.startedAt.${seed}`;
         try {
             const saved = Number(localStorage.getItem(key));
             if (Number.isSafeInteger(saved) && saved > 0) return saved;
-            localStorage.setItem(key, String(now));
+            if (now !== null) localStorage.setItem(key, String(now));
         } catch {
             // Keep the clock running in memory when storage is unavailable.
         }
         return now;
     }
 
+    function startDailyClock() {
+        if (activeExercise.id !== 'daily' || session().dailyStartedAt !== null) return;
+        session().dailyStartedAt = dailyStart(activeExercise.seed, Date.now());
+        syncClock();
+    }
+
     function syncClock() {
         const current = session();
         if (activeExercise.id === 'daily') {
-            const now = Date.now();
-            if (current.dailyStartedAt === null && !document.hidden) {
-                current.dailyStartedAt = dailyStart(activeExercise.seed, now);
-            }
             if (current.dailyStartedAt !== null && !current.feedback?.correct) {
-                current.elapsed = Math.max(current.elapsed, now - current.dailyStartedAt);
+                current.elapsed = Math.max(current.elapsed, Date.now() - current.dailyStartedAt);
             }
         } else if (activeExercise.timed && !document.hidden && !current.feedback?.correct) {
             if (current.startedAt === null) current.startedAt = performance.now();
@@ -192,6 +194,7 @@
 
     function createNodes() {
         ui.nodes.replaceChildren();
+        ui.nodes.dataset.count = activeExercise.nodes.length;
         nodeElements.clear();
         const layout = positions(activeExercise);
         activeExercise.nodes.forEach(id => {
@@ -219,6 +222,9 @@
         cancelClicks();
         cancelDraft();
         activeExercise = exercise;
+        if (exercise.id === 'daily' && session().dailyStartedAt === null) {
+            session().dailyStartedAt = dailyStart(exercise.seed);
+        }
         ui['timed-controls'].hidden = !exercise.timed;
         ui['challenge-date'].hidden = exercise.id !== 'daily';
         ui['challenge-date'].textContent = exercise.dateLabel ? `Défi du ${exercise.dateLabel}` : '';
@@ -314,9 +320,10 @@
     }
 
     function handleLightClick(event, id) {
+        if (event.detail !== 0 && performance.now() < ignoreClickUntil) return;
+        startDailyClock();
         // Keyboard and assistive-technology clicks need no double-click delay.
         if (event.detail === 0) { changeValue(id); return; }
-        if (performance.now() < ignoreClickUntil) return;
         // Count taps ourselves: touch devices do not consistently emit dblclick.
         if (clickTimers.has(id)) {
             clearTimeout(clickTimers.get(id));
@@ -332,6 +339,7 @@
 
     function beginDrag(event, id) {
         if (drag || event.button !== 0 || event.isPrimary === false) return;
+        startDailyClock();
         drag = { from: id, pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
         if (event.isTrusted) {
             event.currentTarget.setPointerCapture(event.pointerId);
