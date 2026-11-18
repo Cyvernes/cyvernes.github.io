@@ -12,17 +12,18 @@
         'clear-edges', 'check-edges', 'feedback', 'announcement',
         'game-hud', 'open-help', 'close-help', 'help-panel',
         'close-result', 'result-panel', 'expand-help', 'help-content',
-        'timed-controls', 'exercise-timer', 'challenge-date', 'new-graph'
+        'timed-controls', 'exercise-timer', 'challenge-date', 'random-controls', 'new-graph'
     ].map(id => [id, byId(id)]));
 
     // Only the true causal model affects the lights. A learner's arrows never do.
     const exercises = [...model.exercises];
     const freshSession = exercise => ({ states: model.createNodeStates(exercise), edges: [],
-        feedback: null, elapsed: 0, startedAt: null });
+        feedback: null, elapsed: 0, startedAt: null, dailyStartedAt: null });
     const sessions = new Map(exercises.map(exercise => [exercise.id, freshSession(exercise)]));
     const nodeElements = new Map();
     const tabElements = new Map();
     const clickTimers = new Map();
+    const showGuidance = shouldShowGuidance();
     const discovered = { help: false, intervention: false, value: false, arrow: false };
     let gestureNotice = '';
     let activeExercise = exercises[0];
@@ -34,15 +35,48 @@
     function session() { return sessions.get(activeExercise.id); }
     function announce(message) { ui.announcement.textContent = message; }
 
+    function shouldShowGuidance() {
+        const key = 'tablette.lastVisit';
+        const now = Date.now();
+        const week = 7 * 24 * 60 * 60 * 1000;
+        try {
+            const lastVisit = Number(localStorage.getItem(key));
+            localStorage.setItem(key, String(now));
+            return !Number.isSafeInteger(lastVisit) || lastVisit <= 0 || lastVisit > now || now - lastVisit >= week;
+        } catch {
+            return true;
+        }
+    }
+
     function pauseClock() {
         const current = session();
         if (current.startedAt !== null) current.elapsed += performance.now() - current.startedAt;
         current.startedAt = null;
     }
 
+    function dailyStart(seed, now) {
+        const key = `tablette.daily.startedAt.${seed}`;
+        try {
+            const saved = Number(localStorage.getItem(key));
+            if (Number.isSafeInteger(saved) && saved > 0) return saved;
+            localStorage.setItem(key, String(now));
+        } catch {
+            // Keep the clock running in memory when storage is unavailable.
+        }
+        return now;
+    }
+
     function syncClock() {
         const current = session();
-        if (activeExercise.timed && !document.hidden && !current.feedback?.correct) {
+        if (activeExercise.id === 'daily') {
+            const now = Date.now();
+            if (current.dailyStartedAt === null && !document.hidden) {
+                current.dailyStartedAt = dailyStart(activeExercise.seed, now);
+            }
+            if (current.dailyStartedAt !== null && !current.feedback?.correct) {
+                current.elapsed = Math.max(current.elapsed, now - current.dailyStartedAt);
+            }
+        } else if (activeExercise.timed && !document.hidden && !current.feedback?.correct) {
             if (current.startedAt === null) current.startedAt = performance.now();
         } else pauseClock();
         const elapsed = current.elapsed + (current.startedAt === null ? 0 : performance.now() - current.startedAt);
@@ -113,6 +147,14 @@
             const points = [[27, 17], [73, 17], [17, 50], [50, 50], [83, 50], [27, 83], [73, 83]];
             return Object.fromEntries(exercise.nodes.map((id, index) => [id, points[index]]));
         }
+        if (exercise.nodes.length > 9) {
+            const rows = Math.ceil(exercise.nodes.length / 3);
+            return Object.fromEntries(exercise.nodes.map((id, index) => {
+                const row = Math.floor(index / 3);
+                const offset = row % 2 === 0 ? -4 : 4;
+                return [id, [21 + 29 * (index % 3) + offset, 100 * (row + .5) / rows]];
+            }));
+        }
         if (exercise.nodes.length === 9) {
             // An odd ring leaves the centre free, without aligning three buttons.
             // On desktop, size a 3:2 ellipse from the width and scale both radii
@@ -180,7 +222,7 @@
         ui['timed-controls'].hidden = !exercise.timed;
         ui['challenge-date'].hidden = exercise.id !== 'daily';
         ui['challenge-date'].textContent = exercise.dateLabel ? `Défi du ${exercise.dateLabel}` : '';
-        ui['new-graph'].hidden = exercise.id !== 'random';
+        ui['random-controls'].hidden = exercise.id !== 'random';
         syncClock();
         ui['result-panel'].hidden = true;
         ui.board.dataset.exercise = exercise.id;
@@ -230,8 +272,8 @@
             message = 'Faites glisser un bouton vers un autre pour proposer une flèche.';
         }
         const hint = ui['first-steps'];
-        hint.dataset.step = step;
-        hint.textContent = gestureNotice || message;
+        hint.dataset.step = showGuidance ? step : 'done';
+        hint.textContent = showGuidance ? gestureNotice || message : '';
         hint.hidden = !hint.textContent;
         scheduleConnections();
     }
@@ -251,7 +293,8 @@
         if (!session().states[id].isInterv) {
             gestureNotice = 'Ce bouton est naturel. Appuyez deux fois dessus pour intervenir.';
             renderGuidance();
-            announce(`Bouton ${id} naturel. Faites un double appui pour passer en intervention et changer sa valeur.`);
+            const status = `Bouton ${id} naturel.`;
+            announce(showGuidance ? `${status} Faites un double appui pour passer en intervention et changer sa valeur.` : status);
             return;
         }
         session().states = model.toggleValue(activeExercise, session().states, id);
@@ -659,6 +702,7 @@
     });
     ui['check-edges'].addEventListener('click', () => {
         cancelClicks();
+        if (activeExercise.id === 'daily') syncClock();
         session().feedback = model.checkEdges(activeExercise, session().edges);
         syncClock();
         renderFeedback();
@@ -672,8 +716,8 @@
 
     ui['new-graph'].addEventListener('click', () => {
         if (activeExercise.id !== 'random') return;
-        pauseClock();
-        selectExercise(replaceExercise(model.createRandomExercise()));
+        const size = Number(ui['random-controls'].querySelector('input:checked').value);
+        selectExercise(replaceExercise(model.createRandomExercise(undefined, size)));
     });
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden && activeExercise.id === 'daily' && activeExercise.seed !== model.daySeed()) selectExercise(activeExercise);
@@ -742,8 +786,9 @@
         const resultHeight = ui['result-panel'].hidden ? 0 : ui['result-panel'].getBoundingClientRect().height + 12;
         const bottom = Math.ceil(actionsHeight + 18 + Math.max(helpHeight, resultHeight));
         const nodeHeight = nodeElements.values().next().value.node.getBoundingClientRect().height;
-        const rows = activeExercise.nodes.length > 3 ? 3 : activeExercise.nodes.length > 2 ? 2 : 1;
-        const playHeight = Math.ceil(nodeHeight * rows + (activeExercise.id === 'daily' ? 96 : 48));
+        const count = activeExercise.nodes.length;
+        const rows = count > 3 ? Math.ceil(count / 3) : count > 2 ? 2 : 1;
+        const playHeight = Math.ceil(nodeHeight * rows + (count >= 9 ? 96 : 48));
         app.style.setProperty('--game-min-height', `${top + bottom + playHeight}px`);
         app.style.setProperty('--play-top', `${top}px`);
         app.style.setProperty('--play-bottom', `${bottom}px`);

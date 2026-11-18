@@ -26,9 +26,17 @@
             <div id="timed-controls" class="timed-controls" hidden>
                 <span id="challenge-date" hidden></span>
                 <span>Chrono · <span id="exercise-timer" role="timer" aria-label="Temps de jeu">00:00</span></span>
-                <button type="button" id="new-graph" class="reset-button" title="Tirer un nouveau graphe et remettre le chrono à zéro">Nouveau graphe</button>
+                <div id="random-controls" class="random-controls" hidden>
+                    <fieldset class="random-sizes">
+                        <legend>Nombre de boutons</legend>
+                        <label><input class="sr-only" type="radio" name="random-size" value="7" checked><span>7</span></label>
+                        <label><input class="sr-only" type="radio" name="random-size" value="9"><span>9</span></label>
+                        <label><input class="sr-only" type="radio" name="random-size" value="12"><span>12</span></label>
+                    </fieldset>
+                    <button type="button" id="new-graph" class="reset-button" title="Tirer un nouveau graphe et remettre le chrono à zéro">Nouveau graphe</button>
+                </div>
             </div>
-            <p id="first-steps" class="first-steps" role="status" aria-live="polite">Pour commencer, ouvrez l’aide : vous y trouverez les règles et des astuces.</p>
+            <p id="first-steps" class="first-steps" role="status" aria-live="polite" hidden></p>
         </header>
 
         <section id="exercise-panel" class="exercise-panel" role="tabpanel" aria-labelledby="tab-duo" tabindex="0">

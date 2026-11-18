@@ -107,9 +107,12 @@
         await test('Graphes aléatoires : taille, connexité, absence de cycles et reproductibilité', () => {
             const variants = new Set();
             for (let seed = 0; seed < 100; seed++) {
-                for (const exercise of [model.createRandomExercise(seed), model.createDailyExercise(new Date(Date.UTC(2026, 0, seed + 1)))]) {
-                    const size = exercise.id === 'random' ? 7 : 9;
-                    const count = exercise.id === 'random' ? 7 : 11;
+                for (const [exercise, size, count] of [
+                    [model.createRandomExercise(seed), 7, 7],
+                    [model.createRandomExercise(seed, 9), 9, 10],
+                    [model.createRandomExercise(seed, 12), 12, 14],
+                    [model.createDailyExercise(new Date(Date.UTC(2026, 0, seed + 1))), 9, 11]
+                ]) {
                     assert(exercise.nodes.length === size && exercise.parents.flat().length === count, 'Complexité incorrecte.');
                     const remaining = new Set(exercise.nodes);
                     while (remaining.size) {
@@ -482,8 +485,18 @@
             click('#close-help');
         });
         await test('Graphes générés : boutons accessibles avec et sans aide, sur ordinateur et téléphone', async () => {
-            for (const id of ['random', 'daily']) {
+            for (const [id, count] of [['random', 9], ['random', 12], ['random', 7], ['daily', 9]]) {
                 click(`#tab-${id}`);
+                const controls = doc.querySelector('#random-controls');
+                assert(controls.hidden === (id !== 'random'), 'Sélecteur affiché dans le mauvais onglet.');
+                if (id === 'random') {
+                    const choice = controls.querySelector(`input[value="${count}"]`);
+                    choice.labels[0].click();
+                    assert(choice.checked, 'Impossible de sélectionner la taille.');
+                    click('#new-graph');
+                    assert(doc.querySelector('#exercise-timer').textContent === '00:00', 'Le nouveau graphe ne remet pas le chrono à zéro.');
+                }
+                assert(doc.querySelectorAll('.node-light').length === count, 'Nombre de boutons incorrect.');
                 click('#close-result');
                 for (const [width, height] of [[320, 667], [390, 844], [844, 390], [1100, 800]]) {
                     frame.style.width = `${width}px`;
@@ -492,6 +505,15 @@
                         if (doc.querySelector('#help-panel').hidden === open) click('#open-help');
                         await settleLayout();
                         assert(doc.documentElement.scrollWidth <= width, `Débordement : ${id}, ${width}px.`);
+                        if (id === 'random') {
+                            const choices = [...controls.querySelectorAll('label > span')];
+                            assert(choices.map(choice => choice.textContent).join(',') === '7,9,12', 'Choix de taille incomplets.');
+                            for (const choice of choices) {
+                                const rect = choice.getBoundingClientRect();
+                                assert(rect.width >= 44 && rect.height >= 44 && rect.left >= 0 && rect.right <= width,
+                                    `Choix ${choice.textContent} mal affiché à ${width}px.`);
+                            }
+                        }
                         const hud = doc.querySelector('#game-hud').getBoundingClientRect();
                         const actions = doc.querySelector('.tablet-actions').getBoundingClientRect();
                         const help = doc.querySelector('#help-panel').getBoundingClientRect();
@@ -564,10 +586,13 @@
             await settleLayout();
             win.scrollTo(0, 0);
         });
-        await test('Chronos : indépendants, pause entre onglets, arrêt à la réussite et nouvelle partie', () => {
+        await test('Chronos : indépendants, pause du graphe aléatoire et arrêt à la réussite', () => {
             const descriptor = Object.getOwnPropertyDescriptor(win.performance, 'now');
+            const dateNow = win.Date.now;
+            let wallTime = dateNow();
             let now = win.performance.now() + 1000;
             Object.defineProperty(win.performance, 'now', { configurable: true, value: () => now });
+            win.Date.now = () => wallTime;
             const timer = () => doc.querySelector('#exercise-timer').textContent;
             try {
                 click('#close-help');
@@ -583,7 +608,7 @@
                 assert(timer() === '00:03' && doc.querySelectorAll('.edge').length === 1 && isInterv(0), 'Pause ou conservation de la partie incorrecte.');
                 now += 2000;
                 click('#tab-daily');
-                assert(doc.querySelector('#new-graph').hidden && !doc.querySelector('#challenge-date').hidden, 'Bouton pour recommencer le défi encore présent.');
+                assert(doc.querySelector('#random-controls').hidden && !doc.querySelector('#challenge-date').hidden, 'Commandes du graphe aléatoire visibles dans le défi.');
                 const before = timer();
                 const edgeCount = doc.querySelectorAll('.edge').length;
                 click('#new-graph');
@@ -593,6 +618,7 @@
                 assert(timer() === before, 'Les commandes du défi remettent le chrono à zéro.');
                 const startSeconds = before.split(':').map(Number).reduce((minutes, seconds) => minutes * 60 + seconds);
                 now += 4000;
+                wallTime += 4000;
                 const daily = win.CausalTablet.createDailyExercise();
                 daily.nodes.forEach(to => daily.parents[to].forEach(from => draw(from, to)));
                 click('#check-edges');
@@ -600,6 +626,7 @@
                 const finalSeconds = finalTime.split(':').map(Number).reduce((minutes, seconds) => minutes * 60 + seconds);
                 assert(doc.querySelector('#feedback').classList.contains('is-correct') && finalSeconds === startSeconds + 4, 'Défi ou arrêt du chrono incorrect.');
                 now += 9000;
+                wallTime += 9000;
                 click('#tab-random');
                 assert(timer() === '00:05', 'Les deux chronos interfèrent.');
                 click('#new-graph');
@@ -609,9 +636,44 @@
                 click('#tab-daily');
                 assert(timer() === finalTime, 'Chrono relancé après réussite.');
             } finally {
+                win.Date.now = dateNow;
                 if (descriptor) Object.defineProperty(win.performance, 'now', descriptor);
                 else delete win.performance.now;
             }
+        });
+        await test('Défi du jour : premier lancement conservé après rechargement', async () => {
+            const seed = win.CausalTablet.daySeed();
+            const key = `tablette.daily.startedAt.${seed}`;
+            const startedAt = Number(win.localStorage.getItem(key));
+            assert(startedAt > 0, 'Le premier lancement n’a pas été enregistré.');
+            const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
+            win.location.reload();
+            await loaded;
+            const reloaded = frame.contentDocument;
+            const dateNow = win.Date.now;
+            win.Date.now = () => startedAt + 67000;
+            try {
+                reloaded.querySelector('#tab-daily').click();
+                assert(reloaded.querySelector('#exercise-timer').textContent === '01:07', 'Le chrono n’a pas repris au premier lancement.');
+                assert(Number(win.localStorage.getItem(key)) === startedAt, 'Le premier lancement a été écrasé.');
+            } finally {
+                win.Date.now = dateNow;
+            }
+        });
+        await test('Aide automatique : masquée en cas de visite récente et rétablie après une semaine', async () => {
+            const reloaded = frame.contentDocument;
+            const hint = reloaded.querySelector('#first-steps');
+            assert(hint.hidden && !hint.textContent, 'Le guide apparaît après une visite récente.');
+            reloaded.querySelector('#open-help').click();
+            assert(!reloaded.querySelector('#help-panel').hidden, 'Le bouton Aide ne fonctionne plus.');
+            const key = 'tablette.lastVisit';
+            const olderVisit = win.Date.now() - 7 * 24 * 60 * 60 * 1000;
+            win.localStorage.setItem(key, String(olderVisit));
+            const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
+            win.location.reload();
+            await loaded;
+            assert(!frame.contentDocument.querySelector('#first-steps').hidden, 'Le guide ne revient pas après une semaine.');
+            assert(Number(win.localStorage.getItem(key)) > olderVisit, 'La date de la dernière visite n’a pas été actualisée.');
         });
         document.body.dataset.testStatus = failed ? 'failed' : 'passed';
         results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;

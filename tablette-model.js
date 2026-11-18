@@ -63,10 +63,11 @@
             parents: Object.freeze(graph.map(list => Object.freeze(list.sort((a, b) => a - b)))) };
     }
 
-    function createRandomExercise(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0]) {
+    function createRandomExercise(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0], size = 7) {
+        const edgeCount = size + Math.floor((size - 7) / 2);
         return Object.freeze({ id: 'random', label: 'Pour s’amuser', title: 'Un nouveau réseau à explorer.',
-            description: 'Sept boutons et un graphe tiré au hasard. Découvrez ses relations, puis lancez un nouveau graphe pour rejouer.',
-            timed: true, ...generateGraph(seed, 7, 7) });
+            description: `${size} boutons et un graphe tiré au hasard. Choisissez le nombre de boutons, puis lancez un nouveau graphe pour rejouer.`,
+            timed: true, ...generateGraph(seed, size, edgeCount) });
     }
 
     function createDailyExercise(date = new Date()) {
