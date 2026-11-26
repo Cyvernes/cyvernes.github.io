@@ -123,7 +123,7 @@ const publications = [
         volume: "306",
         series: "Proceedings of Machine Learning Research",
         links: {
-            pdf: "https://arxiv.org/pdf/2606.03719",
+            pdf: "https://raw.githubusercontent.com/mlresearch/v306/main/assets/yvernes26a/yvernes26a.pdf",
             arxiv: "https://arxiv.org/abs/2606.03719",
             proceedings: "https://proceedings.mlr.press/v306/yvernes26a.html",
             openreview: "https://openreview.net/forum?id=KUBkuPwGf4",
@@ -134,7 +134,7 @@ const publications = [
         bibtex: {
             type: "inproceedings",
             key: "pmlr-v306-yvernes26a",
-            booktitle: "Proceedings of the 43rd International Conference on Machine Learning (ICML)",
+            booktitle: "Proceedings of the 43rd International Conference on Machine Learning",
             pages: "152645--152672",
             volume: "306",
             series: "Proceedings of Machine Learning Research",
@@ -146,11 +146,17 @@ const publications = [
     }
 ];
 
+// Liste des auteurs ; les espaces insécables (&nbsp;) empêchent de couper un nom en fin de ligne
 function publicationAuthors(pub) {
-    return pub.authors.map(author => author === "Clément Yvernes" ? `<strong>${author}</strong>` : author).join(", ");
+    return pub.authors.map(author => {
+        const name = author.replace(/ /g, "&nbsp;");
+        return author === "Clément Yvernes" ? `<strong>${name}</strong>` : name;
+    }).join(", ");
 }
 
-// Liens affichés sous chaque publication : [champ de links, icône (voir script.js), libellé, clé de traduction]
+// Liens de chaque publication : [champ de links, icône (voir script.js), libellé, clé de traduction].
+// Seuls « PDF » et « Citation » sont toujours visibles ; les autres sont rangés dans le menu « ··· »,
+// dans l'ordre de cette liste.
 const publicationLinkLabels = [
     ["proceedings", "book-open", "Proceedings", "pub-proceedings"],
     ["pdf", "file-text", "PDF"],
@@ -162,13 +168,12 @@ const publicationLinkLabels = [
 ];
 
 function generatePublicationHTML(pub, index) {
-    const primarySource = pub.links.software ? 'software' : pub.links.proceedings ? 'proceedings' : 'arxiv';
     const primaryLinks = [];
     const moreLinks = [];
 
     for (const [name, iconName, label, labelKey] of publicationLinkLabels) {
         if (!pub.links[name]) continue;
-        const group = name === 'pdf' || name === primarySource ? primaryLinks : moreLinks;
+        const group = name === 'pdf' ? primaryLinks : moreLinks;
         group.push(`
             <a href="${pub.links[name]}" target="_blank" rel="noopener" class="pub-link">
                 ${icon(iconName)}
@@ -203,8 +208,8 @@ function generatePublicationHTML(pub, index) {
             <div class="pub-content">
                 <h3 class="pub-title">${pub.title}</h3>
                 <div class="pub-meta">
-                    <p class="pub-venue"><time datetime="${pub.year}">${pub.year}</time> &middot; ${venue}</p>
                     <p class="pub-authors">${publicationAuthors(pub)}</p>
+                    <p class="pub-venue"><time datetime="${pub.year}">${pub.year}</time> &middot; ${venue}</p>
                 </div>
                 ${award}
                 ${related}

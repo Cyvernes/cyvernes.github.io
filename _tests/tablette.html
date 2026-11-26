@@ -767,6 +767,17 @@
                 'Un résultat illisible bloque la page.');
             win.localStorage.removeItem(resultKey);
         });
+        await test('Police : Inter, hébergée sur le site, est chargée', async () => {
+            const page = frame.contentDocument;
+            const loaded = () => [...page.fonts].some(face => face.family.replace(/["']/g, '') === 'Inter' && face.status === 'loaded');
+            // Poll from this page: headless browsers do not always paint the iframe.
+            for (let elapsed = 0; elapsed < 3000 && !loaded(); elapsed += 25) {
+                page.documentElement.getBoundingClientRect();
+                await new Promise(resolve => setTimeout(resolve, 25));
+            }
+            assert(loaded(), 'Police Inter non chargée.');
+            assert(frame.contentWindow.getComputedStyle(page.body).fontFamily.startsWith('Inter'), 'Inter n’est pas la police de la page.');
+        });
         document.body.dataset.testStatus = failed ? 'failed' : 'passed';
         results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;
     })().catch(error => {

@@ -5,7 +5,7 @@
 //   description : ce que j'y ai fait, en une phrase { fr, en } (sans répéter l'établissement)
 //   years       : années d'enseignement, ex. [2024, 2025, 2026] (affiché « 2024–2026 »)
 //   institution : établissement { fr, en }
-//   website     : facultatif, page officielle du cours (pas encore affichée sur le site)
+//   website     : facultatif, page officielle du cours (lien « Page du cours » à droite)
 const courses = [
     {
         id: "iasd_master",
@@ -134,6 +134,10 @@ function generateCourseHTML(course) {
                 </div>
                 ${description ? `<p class="pub-note">${description}</p>` : ''}
             </div>
+            ${course.website ? `
+            <div class="pub-links">
+                <a href="${course.website}" target="_blank" rel="noopener" class="pub-link">${icon('external-link')} ${t('course-page')}</a>
+            </div>` : ''}
         </article>`;
 }
 

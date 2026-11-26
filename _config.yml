@@ -4,11 +4,10 @@ description: "Personal academic website of Clément Yvernes, PhD student in Caus
 url: "https://cyvernes.github.io"
 baseurl: ""
 
-# Plugins GitHub Pages
+# Plugins GitHub Pages : seul le plan du site (sitemap.xml, pour les moteurs de recherche) sert.
+# Le site n'a ni articles ni gabarits : jekyll-feed et jekyll-seo-tag n'avaient aucun effet utile.
 plugins:
-  - jekyll-feed
   - jekyll-sitemap
-  - jekyll-seo-tag
 
 # Exclusions
 exclude:

@@ -68,10 +68,10 @@ const translations = {
         'date-lambda': '5 juin 2026',
         'lambda-description': 'Interview sur la causalité, avec Flora Helmers, pour Lambda, une émission de médiation scientifique produite par AurorAlpes qui invite des chercheurs à présenter leurs travaux.',
         'lambda-watch': 'Voir l’interview',
+        'date-fete-science': 'Octobre 2025',
         'tablet-title': 'Explorer la causalité avec des lumières',
         'tablet-outreach': 'Conception et animation d’un atelier sur la causalité.',
-        'tablet-online': 'Une version en ligne de l’atelier est disponible',
-        'tablet-cta': 'ici',
+        'tablet-cta': 'Essayer la version en ligne',
 
         // Logiciels et projets
         'software-title': 'Logiciels et projets',
@@ -83,6 +83,7 @@ const translations = {
         // Enseignement et encadrement (les cours sont dans teaching.js)
         'nav-teaching': 'Enseignement et encadrement',
         'courses-title': 'Cours',
+        'course-page': 'Page du cours',
         'internships-title': 'Encadrement de stages',
         'stage-younes-topic': 'Algorithmes d’identification causale en Python',
         'stage-amine-topic': 'Interface web pour l’identification causale',
@@ -159,10 +160,10 @@ const translations = {
         'date-lambda': '5 June 2026',
         'lambda-description': 'Interview on causality, with Flora Helmers, for Lambda, a science outreach show produced by AurorAlpes that invites researchers to present their work.',
         'lambda-watch': 'Watch the interview (in French)',
+        'date-fete-science': 'October 2025',
         'tablet-title': 'Exploring causality with lights',
         'tablet-outreach': 'Design and delivery of a workshop on causality.',
-        'tablet-online': 'An online version of the workshop (in French) is available',
-        'tablet-cta': 'here',
+        'tablet-cta': 'Try the online version (in French)',
 
         // Logiciels et projets
         'software-title': 'Software and projects',
@@ -174,6 +175,7 @@ const translations = {
         // Enseignement et encadrement (les cours sont dans teaching.js)
         'nav-teaching': 'Teaching & supervision',
         'courses-title': 'Courses',
+        'course-page': 'Course page',
         'internships-title': 'Internship supervision',
         'stage-younes-topic': 'Causal identification algorithms in Python',
         'stage-amine-topic': 'Web interface for causal identification',

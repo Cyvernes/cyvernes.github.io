@@ -19,7 +19,7 @@ Il n'y a rien à compiler : on modifie les fichiers, on pousse sur `main`, et le
 
 Les PDF sont rangés dans `posters/` et `slides/`. La police Inter est hébergée dans `fonts/` : le site ne charge rien depuis un autre site.
 
-L'image affichée quand on partage le site (LinkedIn, Mastodon…) est `images/og-image.png` (PNG de 1200 × 630 px) ; l'icône d'écran d'accueil iOS est `images/apple-touch-icon.png` (180 × 180 px). Ces formats doivent rester des PNG : les SVG ne sont pas acceptés.
+L'image affichée quand on partage le site (LinkedIn, Mastodon…) est `images/og-image.png` (PNG de 2400 × 1260 px, double résolution du format standard 1200 × 630 pour rester net sur les écrans haute densité) ; l'icône d'écran d'accueil iOS est `images/apple-touch-icon.png` (180 × 180 px). Ces formats doivent rester des PNG : les SVG ne sont pas acceptés.
 
 ## Langue
 

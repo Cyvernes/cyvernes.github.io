@@ -333,23 +333,39 @@ main > section:not(.hero):nth-of-type(odd) {
     opacity: 0.75;
 }
 
+/* Profils : icône et nom, comme la ligne email. Le soulignement discret les distingue
+   de l'email, qui n'est pas un lien. La zone cliquable fait 34 px de haut ; le retrait
+   négatif aligne la première icône sur l'icône email quand les profils passent à la ligne. */
 .hero-profiles {
     display: flex;
-    gap: 0.45rem;
+    flex-wrap: wrap;
+    gap: 0.1rem;
+    margin-left: -0.6rem;
 }
 
 .hero-profiles a {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    border-radius: 50%;
-    color: var(--text-white);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 34px;
+    padding: 0 0.6rem;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.35);
+    text-underline-offset: 0.25em;
+}
+
+.hero-profiles a svg {
+    flex: none;
+    opacity: 0.85;
 }
 
 .hero-profiles a:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-white);
+    text-decoration-color: currentColor;
 }
 
 .hero :focus-visible {
@@ -481,17 +497,40 @@ main > section:not(.hero):nth-of-type(odd) {
     }
 }
 
+/* Sur grand écran : le titre occupe toute la largeur, et les liens se placent à droite
+   de la ligne « auteurs · année · lieu », plus courte, au lieu de rétrécir le titre.
+   (.pub-content s'efface pour que titre, ligne et notes se rangent dans la grille.) */
 @media (min-width: 860px) {
     .publication-item {
         grid-template-columns: minmax(0, 1fr) max-content;
-        column-gap: clamp(1rem, 3vw, 2.5rem);
-        align-items: center;
+        column-gap: 1.25rem;
+        row-gap: 0;
     }
 
+    .pub-content {
+        display: contents;
+    }
+
+    .pub-title,
+    .pub-note {
+        grid-column: 1 / -1;
+        min-width: 0;
+    }
+
+    .pub-meta {
+        grid-column: 1;
+        grid-row: 2;
+        min-width: 0;
+    }
+
+    /* Alignés sur la première ligne sous le titre (les auteurs), même si elle passe à la ligne */
     .pub-links {
+        grid-column: 2;
+        grid-row: 2;
+        align-self: start;
         justify-content: flex-end;
+        margin-bottom: -0.35rem; /* les boutons (30 px) ne doivent pas agrandir la ligne de texte (≈ 24 px) */
     }
-
 }
 
 /* Cartes : médiation et logiciels */

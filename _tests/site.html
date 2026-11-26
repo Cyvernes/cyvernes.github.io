@@ -108,15 +108,46 @@
             assert(meta('meta[property="og:image"]') === 'https://cyvernes.github.io/images/og-image.png', 'og:image incorrect.');
             assert(meta('meta[name="twitter:image"]') === 'https://cyvernes.github.io/images/og-image.png', 'twitter:image incorrect.');
             assert(meta('meta[name="twitter:card"]') === 'summary_large_image', 'twitter:card absent.');
-            assert(meta('meta[property="og:image:width"]') === '1200' && meta('meta[property="og:image:height"]') === '630', 'Dimensions non déclarées.');
+            assert(meta('meta[property="og:image:width"]') === '2400' && meta('meta[property="og:image:height"]') === '1260', 'Dimensions non déclarées.');
             const share = await loadImage('../images/og-image.png');
-            assert(share.naturalWidth === 1200 && share.naturalHeight === 630, `Image de partage : ${share.naturalWidth}×${share.naturalHeight}`);
+            assert(share.naturalWidth === 2400 && share.naturalHeight === 1260, `Image de partage : ${share.naturalWidth}×${share.naturalHeight}`);
             const touchHref = doc.querySelector('link[rel="apple-touch-icon"]').getAttribute('href');
             assert(touchHref.endsWith('.png'), 'Icône iOS non PNG.');
             const touch = await loadImage(new URL(touchHref, win.location.href).href);
             assert(touch.naturalWidth === 180 && touch.naturalHeight === 180, `Icône iOS : ${touch.naturalWidth}×${touch.naturalHeight}`);
             const alternate = doc.querySelector('link[rel="alternate"][hreflang="fr"]');
             assert(alternate && alternate.getAttribute('href') === 'https://cyvernes.github.io/?lang=fr', 'Version française non déclarée.');
+        });
+
+        await test('Favicon, robots.txt et fichiers annexes', async () => {
+            assert(!doc.querySelector('link[rel="manifest"]'), 'Manifest encore déclaré.');
+            assert(!doc.querySelector('link[rel="icon"][type="image/x-icon"][href$=".svg"]'), 'Icône SVG déclarée comme .ico.');
+            const icons = [...doc.querySelectorAll('link[rel="icon"]')].map(link => link.getAttribute('href'));
+            assert(icons.includes('/favicon.ico') && icons.includes('/images/favicon.svg'), `Icônes déclarées : ${icons.join(', ')}`);
+            const ico = await loadImage('../favicon.ico');
+            assert(ico.naturalWidth >= 16, 'favicon.ico illisible.');
+            for (const svg of ['../images/favicon.svg', '../images/profile.svg']) {
+                const source = await fetch(svg).then(response => response.text());
+                assert(source.includes('#1a365d') && !source.includes('#ed8936'), `${svg} : couleurs hors palette.`);
+            }
+            const robots = await fetch('../robots.txt').then(response => response.text());
+            assert(robots.includes('Sitemap: https://cyvernes.github.io/sitemap.xml'), 'Sitemap non déclaré dans robots.txt.');
+            assert((await fetch('../site.webmanifest')).status === 404, 'site.webmanifest toujours présent.');
+        });
+
+        await test('Médiation et cours : lien explicite vers la tablette, date, page du cours', async () => {
+            for (const language of ['en', 'fr']) {
+                await load('', language);
+                const tablet = doc.querySelector('#fete-science-2025 a[href="tablette.html"]');
+                assert(tablet && !/^(here|ici)$/i.test(tablet.textContent.trim()) && tablet.textContent.trim().length > 12, `${language} : lien vers la tablette peu explicite.`);
+                assert(doc.querySelector('#fete-science-2025 time[datetime="2025-10"]')?.textContent === (language === 'fr' ? 'Octobre 2025' : 'October 2025'), `${language} : date de l’atelier absente.`);
+                const withSite = data('courses.filter(course => course.website)');
+                assert(withSite.length > 0, 'Aucun cours avec page officielle (test à adapter).');
+                for (const course of withSite) {
+                    const link = doc.querySelector(`#${course.id} a.pub-link[href="${course.website}"]`);
+                    assert(link && link.querySelector('svg.icon') && link.textContent.trim() === (language === 'fr' ? 'Page du cours' : 'Course page'), `${language} : page du cours ${course.id} non affichée.`);
+                }
+            }
         });
 
         await test('Bouton de langue : français, adresse ?lang=fr, puis retour en anglais', async () => {
@@ -194,6 +225,34 @@
                     assert(getComputedStyle(doc.querySelector('.hamburger')).display === 'none', `${width}px : menu hamburger affiché.`);
                     assert(logo.right <= menu.left && menu.right <= right.left, `${language} ${width}px : le menu chevauche le logo ou le bouton de langue.`);
                     assert(links.every(rect => rect.top === links[0].top && rect.right <= right.left), `${language} ${width}px : le menu passe à la ligne.`);
+                }
+            }
+        });
+
+        await test('Publications : auteurs juste sous le titre, PDF et Citation à droite, le reste dans « ··· »', async () => {
+            for (const language of ['en', 'fr']) {
+                await load('', language, 860, 800);
+                for (const item of doc.querySelectorAll('#publications-container .publication-item')) {
+                    const visible = [...item.querySelectorAll('.pub-links > a.pub-link, .pub-links > button.pub-link')].map(link => link.textContent.trim());
+                    assert(visible.join('|') === 'PDF|Citation', `${item.id} : boutons visibles ${visible.join(', ')}.`);
+                    const hidden = [...item.querySelectorAll('.pub-more-menu a')].map(link => link.getAttribute('href'));
+                    const pub = data(`publications.find(p => p.id === '${item.id}')`);
+                    const expected = Object.entries(pub.links).filter(([name, url]) => url && name !== 'pdf').map(([, url]) => url);
+                    assert(expected.every(url => hidden.includes(url)) && hidden.length === expected.length, `${item.id} : liens du menu « ··· » incomplets.`);
+                }
+                for (const width of [860, 940, 1020, 1100, 1280, 1440]) {
+                    frame.style.width = `${width}px`;
+                    await settle();
+                    for (const item of doc.querySelectorAll('#publications-container .publication-item')) {
+                        const box = selector => item.querySelector(selector).getBoundingClientRect();
+                        const [title, authors, venue, links] = ['.pub-title', '.pub-authors', '.pub-venue', '.pub-links'].map(box);
+                        const where = `${language} ${width}px ${item.id}`;
+                        assert(authors.top >= title.bottom - 1 && authors.top - title.bottom <= 8, `${where} : les auteurs ne sont pas juste sous le titre.`);
+                        assert(Math.abs((links.top + links.bottom) / 2 - (authors.top + authors.bottom) / 2) <= 8, `${where} : boutons décalés de la ligne des auteurs.`);
+                        const sameLine = Math.abs(venue.top - authors.top) <= 2 && venue.left >= authors.right;
+                        assert(sameLine || venue.top >= authors.bottom - 1, `${where} : « année · lieu » ni à la suite ni sous les auteurs.`);
+                        assert(authors.right <= links.left && venue.right <= links.left, `${where} : le texte chevauche les boutons.`);
+                    }
                 }
             }
         });
@@ -276,7 +335,12 @@
                 `APA NeurIPS : ${apa('yvernes2025relaxing')}`);
             assert(apa('yvernes2025complete').endsWith('Series. In Proceedings of the Forty-first Conference on Uncertainty in Artificial Intelligence (Vol. 286, pp. 4844–4871). PMLR. https://proceedings.mlr.press/v286/yvernes25a.html'),
                 `APA UAI : ${apa('yvernes2025complete')}`);
-            assert(apa('yvernes2026unveiling').includes('Clausel, M., & Gaussier, E. (2026).') && apa('yvernes2026unveiling').includes('(Vol. 306, pp. 152645–152672). PMLR.'), 'APA ICML incorrect.');
+            assert(apa('yvernes2026unveiling').includes('Clausel, M., & Gaussier, E. (2026).') && apa('yvernes2026unveiling').includes('In Proceedings of the 43rd International Conference on Machine Learning (Vol. 306, pp. 152645–152672). PMLR.'), `APA ICML : ${apa('yvernes2026unveiling')}`);
+            // Article publié : le PDF est la version finale des actes, pas la prépublication arXiv
+            for (const id of ['yvernes2025complete', 'yvernes2026unveiling']) {
+                const pdf = [...doc.querySelectorAll(`#${id} a.pub-link`)].find(link => link.textContent.trim() === 'PDF');
+                assert(pdf && pdf.href.startsWith('https://raw.githubusercontent.com/mlresearch/'), `${id} : PDF hors actes (${pdf?.href}).`);
+            }
             assert(apa('yvernes2026identifiability').endsWith('[Preprint]. arXiv. https://arxiv.org/abs/2610.13520'), 'APA de la prépublication incorrect.');
             assert(apa('yvernes2025identifiability').endsWith('In CAR Workshop at the 41st Conference on Uncertainty in Artificial Intelligence (UAI). https://arxiv.org/abs/2507.06213'), 'APA de l’atelier incorrect.');
             assert([...doc.querySelectorAll('.citation-modal textarea')].every(area => !area.value.includes('&amp;')), 'Texte de citation mal échappé.');
