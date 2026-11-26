@@ -1,8 +1,8 @@
 /* Reset CSS et variables */
 :root {
-    /* Palette : bleu marine et bleu, sur des gris-bleu */
-    --primary-color: #1a365d;     /* Deep blue (titles) */
-    --secondary-color: #2b6cb0;   /* Strong blue (actions/links) */
+    /* Palette : bleu marine (titres, en-tête) et un seul bleu pour les liens */
+    --primary-color: #1a365d;     /* Bleu marine : titres et fond de l'en-tête */
+    --secondary-color: #24558b;   /* Bleu des liens et actions (contraste 7,6:1 sur blanc) */
     --ai-green: #38a169;          /* Confirmation « Copié ! » des citations */
 
     /* Blue-gray neutrals for text and surfaces */
@@ -12,12 +12,6 @@
     --bg-white: #ffffff;
     --bg-light: #f8fafc;          /* Subtle cool light */
 
-    /* Slate gradients */
-    --bg-gradient-start: #364254;
-    --bg-gradient-mid: #4a5568;
-    --bg-gradient-end: #667084;
-    --bg-dark: #2d3748;           /* Sophisticated dark blue-gray */
-    
     /* Section alternance */
     --section-alt: #f8fafc;       /* Light blue-gray for alternating sections */
 
@@ -26,7 +20,12 @@
     --shadow-hover: 0 8px 25px rgba(26, 54, 93, 0.25);
     --transition: all 0.3s ease;
     --border-radius: 12px;
-    --max-width: 1200px;
+
+    /* Colonne de contenu : une seule largeur et une seule marge latérale pour toute la page
+       (menu, en-tête, sections). La marge passe de 16px sur téléphone à 32px sur ordinateur. */
+    --content-width: 1000px;
+    --gutter: clamp(16px, 4vw, 32px);
+    --max-width: calc(var(--content-width) + 2 * var(--gutter));
 
     /* Hauteur de la barre de menu fixe (utilisée aussi par l'en-tête et les ancres) */
     --nav-height: 52px;
@@ -58,29 +57,16 @@ body {
 .container {
     max-width: var(--max-width);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--gutter);
 }
 
+/* Titres alignés à gauche, sur le même bord que le contenu */
 .section-title {
     font-size: clamp(1.5rem, 2.4vw, 1.9rem);
     font-weight: 700;
     letter-spacing: -0.02em;
-    text-align: center;
-    margin-bottom: 1.6rem;
+    margin-bottom: 1.1rem;
     color: var(--primary-color);
-    position: relative;
-}
-
-.section-title::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 2px;
-    background: var(--secondary-color);
-    border-radius: 1px;
 }
 
 /* Espacement vertical identique pour toutes les sections */
@@ -109,7 +95,7 @@ main > section:not(.hero):nth-of-type(odd) {
 .nav-container {
     max-width: var(--max-width);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--gutter);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -234,7 +220,7 @@ main > section:not(.hero):nth-of-type(odd) {
 .hero {
     /* En haut : la hauteur de la barre de menu fixe, plus l'espace au-dessus du nom */
     padding: calc(var(--nav-height) + clamp(1.75rem, 3.5vw, 2.75rem)) 0 clamp(1.75rem, 3.5vw, 2.75rem);
-    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-mid) 50%, var(--bg-gradient-end));
+    background: var(--primary-color);
     color: var(--text-white);
 }
 
@@ -244,18 +230,16 @@ main > section:not(.hero):nth-of-type(odd) {
 }
 
 @media (width > 1020px) {
+    /* Le disque suit le texte à distance fixe, au lieu d'être repoussé au fond d'une colonne */
     .hero-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        display: flex;
         align-items: center;
-        gap: 2rem;
+        gap: clamp(3rem, 5vw, 4.5rem);
     }
 
-    /* Disque centré dans la colonne de droite et sur la hauteur du texte */
     .hero-portrait {
         display: block;
-        justify-self: center;
-        align-self: center;
+        flex: none;
         width: clamp(140px, 12vw, 164px);
         aspect-ratio: 1;
         border-radius: 50%;
@@ -378,7 +362,7 @@ main > section:not(.hero):nth-of-type(odd) {
 }
 
 .pub-venue {
-    color: #24558b;
+    color: var(--secondary-color);
     font-weight: 600;
 }
 
@@ -389,7 +373,7 @@ main > section:not(.hero):nth-of-type(odd) {
 }
 
 .pub-note a {
-    color: #24558b;
+    color: var(--secondary-color);
     text-underline-offset: 0.18em;
 }
 
@@ -409,7 +393,7 @@ main > section:not(.hero):nth-of-type(odd) {
     border: 1px solid transparent;
     border-radius: 5px;
     background: transparent;
-    color: #24558b;
+    color: var(--secondary-color);
     font: inherit;
     font-size: 0.82rem;
     font-weight: 500;
@@ -524,7 +508,7 @@ main > section:not(.hero):nth-of-type(odd) {
 
 .content-card a,
 .cv-content a {
-    color: #24558b;
+    color: var(--secondary-color);
     text-underline-offset: 0.18em;
 }
 
@@ -560,7 +544,7 @@ main > section:not(.hero):nth-of-type(odd) {
 }
 
 .internship-list a {
-    color: #24558b;
+    color: var(--secondary-color);
     text-underline-offset: 0.18em;
 }
 
@@ -583,9 +567,9 @@ main > section:not(.hero):nth-of-type(odd) {
     margin-top: 0.35rem;
 }
 
+/* Largeur de lecture limitée, mais alignée à gauche comme le reste */
 .cv-content {
     max-width: 72ch;
-    margin-inline: auto;
 }
 
 .cv-content h3 {
@@ -593,21 +577,13 @@ main > section:not(.hero):nth-of-type(odd) {
     margin: 1.2rem 0 0.35rem;
 }
 
-/* Footer */
+/* Footer : discret, comme la barre de menu (fond blanc et filet) */
 .footer {
-    background: linear-gradient(135deg, var(--bg-dark) 0%, #1e293b 100%);
-    color: var(--text-white);
-    padding: 2rem 0;
-    text-align: center;
-    position: relative;
-}
-
-.footer-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    background: var(--bg-white);
+    border-top: 1px solid #e2e8f0;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    padding: 1.25rem 0;
 }
 
 /* Presentations : la liste reprend le style des publications */
@@ -677,19 +653,6 @@ main > section:not(.hero):nth-of-type(odd) {
 
     .hamburger.active .bar:nth-child(3) {
         transform: translateY(-7px) rotate(-45deg);
-    }
-}
-
-@media (max-width: 850px) {
-    .footer-content {
-        flex-direction: column;
-        text-align: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding: 0 15px;
     }
 }
 

@@ -18,8 +18,8 @@ const courses = [
             en: "Master 1"
         },
         description: {
-            fr: "Travaux pratiques du Master Informatique.",
-            en: "Practical sessions for the Master in Computer Science."
+            fr: "Travaux pratiques.",
+            en: "Practical sessions."
         },
         years: [2024, 2025, 2026],
         institution: {
@@ -58,7 +58,7 @@ const courses = [
             en: "Bachelor 2"
         },
         description: {
-            fr: "Travaux pratiques de statistique descriptive et inférentielle avec le logiciel R, pour des étudiants de L2 en biologie, SCT et biochimie.",
+            fr: "Travaux pratiques de statistique descriptive et inférentielle avec le logiciel R, pour des étudiants de L2 en biologie, SVT et biochimie.",
             en: "Practical sessions in descriptive and inferential statistics with R, for second-year students in biology, Earth sciences and biochemistry."
         },
         years: [2026],
