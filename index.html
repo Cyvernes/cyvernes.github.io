@@ -4,8 +4,8 @@
     <meta name="google-site-verification" content="B9b4O1CNOJe-R6SZDEGYMQY_VHMXjF2_QYdkPP2sapY" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clément Yvernes's Personal Website</title>
-    <meta name="description" content="Personal academic website of Clément Yvernes, PhD student in Causality at Grenoble Alpes University. Research, publications and teaching.">
+    <title>Clément Yvernes · Causal Inference</title>
+    <meta name="description" content="Clément Yvernes studies which causal effects can be identified with partial knowledge of a system. PhD student in the APTIKAL team at LIG, Université Grenoble Alpes.">
     <meta name="keywords" content="causal inference, causality, machine learning, PhD, research, academic, Grenoble Alpes University">
     <meta name="author" content="Clément Yvernes">
     <link rel="canonical" href="https://cyvernes.github.io/">
@@ -33,8 +33,6 @@
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="icon" type="image/x-icon" href="/images/favicon.svg">
     <link rel="manifest" href="/site.webmanifest">
-    <!-- Prefer PNG for search engine favicon (48x48) -->
-    <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -109,13 +107,14 @@
             <div class="nav-logo">
                 <a href="#home">CY</a>
             </div>
-            <ul class="nav-menu">
+            <ul id="main-menu" class="nav-menu">
                 <li class="nav-item"><a href="#home" class="nav-link" data-lang="nav-home">Home</a></li>
-                <li class="nav-item"><a href="#about" class="nav-link" data-lang="nav-about">About</a></li>
-                <li class="nav-item"><a href="#publications" class="nav-link" data-lang="nav-publications">Publications</a></li>
-                <li class="nav-item"><a href="#conferences" class="nav-link" data-lang="nav-conferences">Conferences</a></li>
-                <li class="nav-item"><a href="#teaching" class="nav-link" data-lang="nav-teaching">Teaching</a></li>
-                <li class="nav-item"><a href="#responsibilities" class="nav-link" data-lang="nav-responsibilities">Responsibilities</a></li>
+                <li class="nav-item"><a href="#publications" class="nav-link" data-lang="menu-research">Research</a></li>
+                <li class="nav-item"><a href="#conferences" class="nav-link" data-lang="menu-conferences">Presentations</a></li>
+                <li class="nav-item"><a href="#responsibilities" class="nav-link" data-lang="menu-outreach">Outreach</a></li>
+                <li class="nav-item"><a href="#software" class="nav-link" data-lang="menu-software">Software</a></li>
+                <li class="nav-item"><a href="#teaching" class="nav-link" data-lang="menu-teaching">Teaching</a></li>
+                <li class="nav-item"><a href="#about" class="nav-link" data-lang="menu-about">About</a></li>
             </ul>
             <div class="nav-right">
                 <div class="language-switcher">
@@ -125,82 +124,54 @@
                         <span class="alt-lang">FR</span>
                     </button>
                 </div>
-                <div class="hamburger">
+                <button type="button" class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="main-menu">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
-                </div>
+                </button>
             </div>
         </div>
     </nav>
 
+    <!-- Les textes anglais ci-dessous ne servent que si le JavaScript ne se charge pas :
+         les textes affichés, en français et en anglais, sont ceux de translations.js. -->
+    <main>
     <section id="home" class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1 class="hero-title">Clément Yvernes</h1>
-                    <h2 class="hero-subtitle" data-lang="hero-position">PhD Student in Causality</h2>
-                    <p class="hero-description">
-                        <span data-lang="hero-institution">Grenoble Alpes University</span><br>
+        <div class="container hero-layout">
+            <div>
+                <h1 class="hero-title">Clément Yvernes</h1>
+                <p class="hero-subtitle" data-lang="hero-affiliation">PhD student in the APTIKAL team at the Grenoble Informatics Laboratory (LIG), Université Grenoble Alpes.</p>
+                <p class="research-question" data-lang="hero-question">How can we reason about cause and effect when our knowledge is incomplete?</p>
+                <div class="hero-meta">
+                    <p class="hero-contact">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>
+                        </svg>
+                        <span>clement.yvernes [at] univ-grenoble-alpes.fr</span>
                     </p>
-                    <div class="hero-buttons">
-                        <a href="#publications" class="btn btn-primary" data-lang="hero-btn-publications">My Publications</a>
-                    </div>
-                    <div class="social-links">
-                        <a href="https://fr.linkedin.com/in/cyvernes" class="social-link">
-                            <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor">
-                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    <div class="hero-profiles">
+                        <a href="https://scholar.google.com/citations?user=EXjrL78AAAAJ" aria-label="Google Scholar">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false">
+                                <path d="M5.242 13.769 0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5s-5.548 1.749-6.758 4.269ZM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z"/>
                             </svg>
                         </a>
-                        <a href="https://scholar.google.com/citations?user=EXjrL78AAAAJ" class="social-link">
-                            <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor">
-                                <path d="M5.242 13.769L0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/>
+                        <a href="https://fr.linkedin.com/in/cyvernes" aria-label="LinkedIn">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.063 2.063 0 1 1 0-4.126 2.063 2.063 0 0 1 0 4.126zm1.782 13.019H3.564V9h3.555zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.454C23.204 24 24 23.227 24 22.271V1.729C24 .774 23.204 0 22.225 0z"/>
                             </svg>
                         </a>
                     </div>
                 </div>
-                <div class="hero-image">
-                    <div class="profile-photo">
-                        <img src="images/profile.svg" alt="Photo de profil" id="profile-img">
-                    </div>
-                </div>
             </div>
-        </div>
-    </section>
-
-    <section id="about" class="about">
-        <div class="container">
-            <h2 class="section-title" data-lang="about-title">About</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p data-lang="about-bio-1">I am a PhD student in computer science and applied mathematics at Grenoble Alpes University, supervised by Éric Gaussier, Marianne Clausel, and Émilie Devijver.</p>
-                    <p data-lang="about-bio-2">My research focuses on causal inference under uncertainty, with a particular interest in identifiability, causal abstractions, and the development of efficient algorithmic approaches for these problems.</p>
-                </div>
-                <div class="about-details">
-                    <div class="detail-item">
-                        <h3><i class="fas fa-graduation-cap"></i> <span data-lang="formation-title">Education</span></h3>
-                        <ul>
-                            <li data-lang="formation-1">Generalist Engineer, Centrale Lyon, 2024</li>
-                            <li data-lang="formation-2">Diplôme de l'ENS de Lyon, 2024</li>
-                            <li data-lang="formation-3">Master's in Computer Science, ENS de Lyon, 2024</li>
-                        </ul>
-                    </div>
-                    <div class="detail-item">
-                        <h3><i class="fas fa-microscope"></i> <span data-lang="expertise-title">Areas of Expertise</span></h3>
-                        <ul>
-                            <li data-lang="expertise-1">Causality</li>
-                            <li data-lang="expertise-2">Causal Inference</li>
-                            <li data-lang="expertise-3">Causal Abstractions</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <!-- Monogramme provisoire. Pour la photo, remplacer cette ligne par :
+                 <img class="hero-portrait" src="images/photo.jpg" alt="Clément Yvernes"> -->
+            <div class="hero-portrait hero-monogram" aria-hidden="true">CY</div>
         </div>
     </section>
 
     <section id="publications" class="publications">
         <div class="container">
-            <h2 class="section-title" data-lang="publications-title">Publications</h2>
+            <h2 class="section-title" data-lang="contributions-title">Contributions</h2>
             <div class="publications-list" id="publications-container">
             </div>
         </div>
@@ -211,55 +182,119 @@
 
     <section id="conferences" class="conferences">
         <div class="container">
-            <h2 class="section-title" data-lang="conferences-title">Conferences</h2>
+            <h2 class="section-title" data-lang="conferences-title">Presentations</h2>
             <div class="conferences-list" id="conferences-container">
-            </div>
-        </div>
-    </section>
-
-    <section id="teaching" class="teaching">
-        <div class="container">
-            <h2 class="section-title" data-lang="teaching-title">Teaching</h2>
-            <div class="teaching-content">
-                <div class="courses-grid" id="teaching-container">
-                </div>
             </div>
         </div>
     </section>
 
     <section id="responsibilities" class="responsibilities">
         <div class="container">
-            <h2 class="section-title" data-lang="responsibilities-title">Responsibilities</h2>
-            <div class="responsibilities-grid">
-                <div class="responsibility-item">
-                    <div class="resp-icon">
-                        <i class="fas fa-globe"></i>
+            <h2 class="section-title" data-lang="responsibilities-title">Science outreach</h2>
+            <div class="content-grid outreach-grid">
+                <article id="pariscience" class="content-card">
+                    <p class="card-meta"><time datetime="2026-10-23" data-lang="date-pariscience">23 October 2026</time> · Pariscience</p>
+                    <h3 data-lang="pariscience-title">The pitfalls of causality: test your intuition</h3>
+                    <p data-lang="pariscience-description">Public talk at the Pariscience 2026 festival, to an audience of 75 people.</p>
+                    <div class="card-links">
+                        <a href="https://pariscience.fr/retour-sur-les-actions-jeune-public-2026/" data-lang="festival-report">Festival report</a>
+                        <a href="https://fr.linkedin.com/posts/pepr-ia_france2030-ia-recherche-activity-7521572370327949313-tLHj" data-lang="festival-pepr">PEPR IA recap</a>
+                        <a href="slides/presentation_festival_pariscience.pdf" data-lang="festival-slides">Slides (PDF, in French)</a>
                     </div>
-                    <h3 data-lang="resp-1-title">Team Website Management</h3>
-                    <p data-lang="resp-1-desc">Maintenance and continuous improvement of the team website: content updates and alignment with team needs.</p>
-                </div>
-                <div class="responsibility-item">
-                    <div class="resp-icon">
-                        <i class="fas fa-flask"></i>
+                </article>
+                <article id="lambda" class="content-card">
+                    <p class="card-meta"><time datetime="2026-06-05" data-lang="date-lambda">5 June 2026</time> · AurorAlpes</p>
+                    <h3 data-lang="lambda-title">Causality on Lambda</h3>
+                    <p data-lang="lambda-description">Interview on causality, with Flora Helmers, for Lambda, a science outreach show produced by AurorAlpes that invites researchers to present their work.</p>
+                    <div class="card-links">
+                        <a href="https://www.youtube.com/watch?v=sIClCD6Vk6I&amp;t=0s" data-lang="lambda-watch">Watch the interview (in French)</a>
                     </div>
-                    <h3 data-lang="resp-2-title">Science Festival 2025 - Outreach Project</h3>
-                    <p data-lang="resp-2-desc">Design and leadership of the interactive workshop "Exploring causality with lights." A buttons-and-lights model that helps understand the difference between correlation and causation, as well as collider bias.</p>
-                </div>
+                </article>
+                <article id="fete-science-2025" class="content-card">
+                    <p class="card-meta">Fête de la science 2025</p>
+                    <h3 data-lang="tablet-title">Exploring causality with lights</h3>
+                    <p>
+                        <span data-lang="tablet-outreach">Design and delivery of a workshop on causality.</span>
+                        <span data-lang="tablet-online">An online version of the workshop (in French) is available</span>
+                        <a href="tablette.html" data-lang="tablet-cta">here</a>.
+                    </p>
+                </article>
             </div>
         </div>
     </section>
+
+    <section id="software" class="content-section">
+        <div class="container">
+            <h2 class="section-title" data-lang="software-title">Software and projects</h2>
+            <article id="lig-causaforge" class="content-card">
+                <h3><a class="card-title-link" href="https://lig-causaforge.imag.fr/" target="_blank" rel="noopener">lig-causaforge<span class="external-arrow" aria-hidden="true">↗</span></a></h3>
+                <p data-lang="causaforge-description">This web application lets you edit a causal graph, identify causal effects and visualise derivation graphs.</p>
+                <p>
+                    <span data-lang="causaforge-credit-before">Supervision of the internships of</span>
+                    <a href="#stage-younes">Younes Hlal</a>
+                    <span data-lang="causaforge-credit-and">and</span>
+                    <a href="#stage-amine">Amine Lahmouz</a><span data-lang="causaforge-credit-after">, who did most of the development.</span>
+                </p>
+            </article>
+        </div>
+    </section>
+
+    <section id="teaching" class="teaching">
+        <div class="container">
+            <h2 class="section-title" data-lang="nav-teaching">Teaching &amp; supervision</h2>
+            <div class="teaching-content">
+                <h3 class="section-subtitle" data-lang="courses-title">Courses</h3>
+                <div class="publications-list" id="teaching-container">
+                </div>
+                <h3 id="internships" class="section-subtitle" data-lang="internships-title">Internship supervision</h3>
+                <ul class="internship-list">
+                    <li id="stage-younes">
+                        <strong>Younes Hlal</strong> &middot;
+                        <span data-lang="stage-younes-topic">Causal identification algorithms in Python</span> &middot;
+                        <a href="#lig-causaforge">lig-causaforge</a>
+                    </li>
+                    <li id="stage-amine">
+                        <strong>Amine Lahmouz</strong> &middot;
+                        <span data-lang="stage-amine-topic">Web interface for causal identification</span> &middot;
+                        <a href="#lig-causaforge">lig-causaforge</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title" data-lang="about-title">About</h2>
+            <div class="cv-content">
+                <p data-lang="about-research">I am a PhD student at <a href="https://www.univ-grenoble-alpes.fr/">Université Grenoble Alpes</a>, in the <a href="https://lig-aptikal.imag.fr/">APTIKAL</a> team of the <a href="https://www.liglab.fr/">Grenoble Informatics Laboratory</a> (LIG). I work on causality with partial knowledge, and more specifically on the identification of causal effects: determining when the effect of an intervention can be computed from observed data without knowing the full causal structure.</p>
+                <h3 data-lang="doctorate-title">PhD</h3>
+                <p data-lang="cv-doctorate">PhD in computer science and applied mathematics, Université Grenoble Alpes (APTIKAL, LIG), ongoing since 2024. Supervisors: Éric Gaussier, Marianne Clausel and Émilie Devijver.</p>
+                <h3 data-lang="formation-title">Education</h3>
+                <ul class="credit-list">
+                    <li data-lang="formation-1">Generalist Engineer, Centrale Lyon, 2024</li>
+                    <li data-lang="formation-2">ENS de Lyon Diploma, 2024</li>
+                    <li data-lang="formation-3">Master’s in Computer Science, ENS de Lyon, 2024</li>
+                </ul>
+                <h3 data-lang="cv-service">Academic service</h3>
+                <p><span data-lang="cv-maintenance">Maintenance and development of the</span> <a href="https://lig-aptikal.imag.fr/" data-lang="cv-aptikal">APTIKAL team website</a>.</p>
+            </div>
+        </div>
+    </section>
+    </main>
 
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-text">
-                    <p>&copy; 2025 Clément Yvernes. <span data-lang="footer-rights">All rights reserved.</span></p>
+                    <p>&copy; <span id="copyright-year">2026</span> Clément Yvernes. <span data-lang="footer-rights">All rights reserved.</span></p>
                 </div>
             </div>
         </div>
     </footer>
 
-    <script src="i18n.js" defer></script>
+    <!-- Textes : translations.js. Listes : publications.js, conferences.js, teaching.js. Fonctionnement : script.js. -->
+    <script src="translations.js" defer></script>
     <script src="publications.js" defer></script>
     <script src="conferences.js" defer></script>
     <script src="teaching.js" defer></script>

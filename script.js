@@ -1,509 +1,234 @@
-// Système de traduction
-const translations = {
-    fr: {
-        // Navigation
-        'nav-home': 'Accueil',
-        'nav-about': 'À propos',
-        'nav-publications': 'Publications',
-        'nav-conferences': 'Conférences',
-        'nav-teaching': 'Enseignement',
-        'nav-responsibilities': 'Responsabilités',
-        
-        // Hero section - CUSTOMIZABLE
-        'hero-position': 'Doctorant en Causalité',
-        'hero-institution': 'Université Grenoble Alpes',
-        'hero-btn-publications': 'Mes Publications',
-        
-        // Section titles
-        'about-title': 'À Propos',
-        'publications-title': 'Publications',
-        'conferences-title': 'Conférences',
-        'teaching-title': 'Enseignement',
-        'responsibilities-title': 'Responsabilités',
-        
-        // Conference types
-        'conf-presentation': 'Présentation orale',
-        'conf-poster': 'Poster',
-        'conf-attendance': 'Participation',
-        'conf-event': 'Événement',
-    // Conference grouping
-    'conf-group-major': 'Conférences internationales',
-    'conf-group-workshops': 'Workshops & Séminaires',
-    'conf-group-attendance': 'Présence / Participation',
-    'conf-group-other': 'Exposés & Événements',
-    'conf-filter-all': 'Tous',
-        
-        // Conference contribution labels
-        'contrib-main-poster': 'Poster conférence principale :',
-        'contrib-workshop-poster': 'Poster workshop :',
-        'contrib-oral-presentation': 'Présentation orale :',
-        'contrib-short-talk': 'Présentation courte (20 min) :',
-    'view-poster': 'Voir le poster',
-        
-        // Locations
-        'location-rio': 'Rio de Janeiro, Brésil',
-        'location-neurips2025': 'San Diego, États-Unis & Mexico, Mexique',
-        'location-lausanne': 'Lausanne, Suisse',
-        'location-paris': 'Paris, France',
-        'location-barcelona': 'Barcelone, Espagne',
-        'location-copenhagen': 'Copenhague, Danemark',
-        
-        // About section - CUSTOMIZABLE
-        'formation-title': 'Formation',
-        'expertise-title': 'Domaines d\'expertise',
-    'about-bio-1': 'Je suis doctorant en informatique et mathématiques appliquées à l’Université Grenoble Alpes, encadré par Éric Gaussier, Marianne Clausel et Émilie Devijver.',
-    'about-bio-2': 'Ma recherche porte sur l’inférence causale en présence d’incertitudes, avec un intérêt particulier pour l’identifiabilité, les abstractions causales et le développement d’approches algorithmiques efficaces pour ces problématiques.',
-        
-        // Formation - CUSTOMIZABLE
-        'formation-1': 'Ingénieur généraliste, Centrale Lyon, 2024',
-        'formation-2': 'Diplôme de l\'ENS de Lyon, 2024',
-        'formation-3': 'Master d\'informatique, ENS de Lyon, 2024',
-        
-        // Expertise - CUSTOMIZABLE
-        'expertise-1': 'Causalité',
-        'expertise-2': 'Inférence causale',
-        'expertise-3': 'Abstractions causales',
-        
-        // Responsibilities - CUSTOMIZABLE  
-    'resp-1-title': 'Gestion du site de l\'équipe',
-    'resp-1-desc': 'Maintenance et évolution du site de l’équipe : mise à jour des contenus et adaptation aux besoins de l’équipe.',
-    'resp-2-title': 'Projet de médiation - Fête de la Science 2025',
-    'resp-2-desc': 'Conception et pilotage de l’atelier interactif « Explorer la causalité avec des lumières ». Maquette de boutons et de lumières qui permet de comprendre la différence entre corrélation et causalité, ainsi que le biais de collidant (« collider bias »).',
-        // Footer
-        'footer-rights': 'Tous droits réservés.',
-        'footer-legal': 'Mentions légales',
-        'footer-privacy': 'Politique de confidentialité'
-    },
-    en: {
-        // Navigation
-        'nav-home': 'Home',
-        'nav-about': 'About',
-        'nav-publications': 'Publications',
-        'nav-conferences': 'Conferences',
-        'nav-teaching': 'Teaching',
-        'nav-responsibilities': 'Responsibilities',
-        
-        // Hero section - CUSTOMIZABLE
-        'hero-position': 'PhD Student in Causality',
-        'hero-institution': 'Grenoble Alpes University',
-        'hero-btn-publications': 'My Publications',
-        
-        // Section titles
-        'about-title': 'About',
-        'publications-title': 'Publications',
-        'conferences-title': 'Conferences',
-        'teaching-title': 'Teaching',
-        'responsibilities-title': 'Responsibilities',
-        
-        // Conference types
-        'conf-presentation': 'Oral Presentation',
-        'conf-poster': 'Poster',
-        'conf-attendance': 'Attendance',
-        'conf-event': 'Event',
-    // Conference grouping
-    'conf-group-major': 'International conferences',
-    'conf-group-workshops': 'Workshops & Seminars',
-    'conf-group-attendance': 'Attendance',
-    'conf-group-other': 'Talks & Events',
-    'conf-filter-all': 'All',
-        
-        // Conference contribution labels
-        'contrib-main-poster': 'Main conference poster:',
-        'contrib-workshop-poster': 'Workshop poster:',
-        'contrib-oral-presentation': 'Oral presentation:',
-        'contrib-short-talk': 'Short talk (20 min):',
-    'view-poster': 'View poster',
-        
-        // Locations
-        'location-rio': 'Rio de Janeiro, Brazil',
-        'location-neurips2025': 'San Diego, USA & Mexico City, Mexico',
-        'location-lausanne': 'Lausanne, Switzerland',
-        'location-paris': 'Paris, France',
-        'location-barcelona': 'Barcelona, Spain',
-        'location-copenhagen': 'Copenhagen, Denmark',
-        
-        // About section - CUSTOMIZABLE
-        'formation-title': 'Education',
-        'expertise-title': 'Areas of Expertise',
-    'about-bio-1': 'I am a PhD student in computer science and applied mathematics at Grenoble Alpes University, supervised by Éric Gaussier, Marianne Clausel, and Émilie Devijver.',
-    'about-bio-2': 'My research focuses on causal inference under uncertainty, with a particular interest in identifiability, causal abstractions, and the development of efficient algorithmic approaches for these problems.',
-        
-        // Formation - CUSTOMIZABLE
-        'formation-1': 'Generalist Engineer, Centrale Lyon, 2024',
-        'formation-2': 'ENS de Lyon Diploma, 2024',
-        'formation-3': 'Master\'s in Computer Science, ENS de Lyon, 2024',
-        
-        // Expertise - CUSTOMIZABLE
-        'expertise-1': 'Causality',
-        'expertise-2': 'Causal Inference',
-        'expertise-3': 'Causal Abstractions',
-        
-        // Research section - CUSTOMIZABLE
-        'research-learn-more': 'Learn more',
-        'research-project-1-title': 'Research Project 1',
-        'research-project-1-desc': '[Description of your first research project in English. Explain the objectives and potential impact.]',
-        'research-project-2-title': 'Research Project 2',
-        'research-project-2-desc': '[Description of your second research project in English. Highlight innovation and methodologies used.]',
-        'research-project-3-title': 'Research Project 3',
-        'research-project-3-desc': '[Description of your third research project in English. Explain how this work contributes to your field of expertise.]',
-        
-        // Responsibilities - CUSTOMIZABLE
-    'resp-1-title': 'Team Website Management',
-    'resp-1-desc': 'Maintenance and continuous improvement of the team website: content updates and alignment with team needs.',
-    'resp-2-title': 'Science Festival 2025 - Outreach Project',
-    'resp-2-desc': 'Design and leadership of the interactive workshop “Exploring causality with lights.” A buttons-and-lights model that helps understand the difference between correlation and causation, as well as collider bias.',
-        
-        // Footer
-        'footer-rights': 'All rights reserved.',
-        'footer-legal': 'Legal Notice',
-        'footer-privacy': 'Privacy Policy'
-    }
-};
+// Fonctionnement commun de la page : langue, menu, fenêtres de citation.
+// Les textes sont dans translations.js ; les listes dans publications.js, conferences.js et teaching.js.
 
-// Rendre les traductions disponibles globalement
-window.translations = translations;
+// ---------------------------------------------------------------------------
+// Langue
+// ---------------------------------------------------------------------------
 
-// Langue actuelle avec gestion d'erreur
-let currentLang;
-try {
-    currentLang = localStorage.getItem('language') || 'en';
-} catch (e) {
-    console.warn('LocalStorage unavailable, using default language');
-    currentLang = 'en';
+// Langue affichée : 'fr' ou 'en'
+function currentLanguage() {
+    return document.documentElement.lang === 'fr' ? 'fr' : 'en';
 }
 
-// Fonction de traduction
+// Texte de translations.js pour une clé, dans la langue affichée
+function t(key) {
+    return translations[currentLanguage()]?.[key] ?? translations.en[key] ?? key;
+}
+
+// Texte d'une donnée : une chaîne (identique dans les deux langues) ou { fr: "...", en: "..." }
+function localized(value) {
+    if (value && typeof value === 'object') {
+        return value[currentLanguage()] || value.en || value.fr || '';
+    }
+    return value || '';
+}
+
+function savedLanguage() {
+    try {
+        return localStorage.getItem('language') === 'fr' ? 'fr' : 'en';
+    } catch (e) {
+        return 'en';
+    }
+}
+
+function saveLanguage(lang) {
+    try {
+        localStorage.setItem('language', lang);
+    } catch (e) {
+        // Stockage indisponible (navigation privée) : la langue n'est simplement pas mémorisée.
+    }
+}
+
+// Génère une liste sans bloquer le reste de la page si son fichier contient une erreur
+function renderSafely(render) {
+    try {
+        render();
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+// Affiche toute la page dans la langue demandée
 function translatePage(lang) {
-    // Mettre à jour la langue du document pour cohérence SEO
     document.documentElement.lang = lang;
-    
-    const elements = document.querySelectorAll('[data-lang]');
-    elements.forEach(element => {
+
+    // 1. Listes générées à partir des données
+    renderSafely(() => initializePublications());
+    renderSafely(() => initializeConferences());
+    renderSafely(() => initializeTeaching());
+
+    // 2. Textes fixes de index.html (attribut data-lang). Ils peuvent contenir du HTML, par exemple un lien.
+    document.querySelectorAll('[data-lang]').forEach((element) => {
         const key = element.getAttribute('data-lang');
-        if (translations[lang] && translations[lang][key]) {
-            // Utiliser innerHTML pour les clés contenant du HTML (publications)
-            if (key.startsWith('pub-')) {
-                element.innerHTML = translations[lang][key];
-            } else {
-                element.textContent = translations[lang][key];
-            }
+        if (Object.hasOwn(translations[lang], key)) {
+            element.innerHTML = translations[lang][key];
         }
     });
-    
-    // Mettre à jour le bouton de langue
-    const currentLangElement = document.getElementById('currentLang');
-    if (currentLangElement) {
-        currentLangElement.textContent = lang.toUpperCase();
-    }
-    const altLang = document.querySelector('.alt-lang');
-    if (altLang) {
-        altLang.textContent = lang === 'fr' ? 'EN' : 'FR';
-    }
-    
-    // Mettre à jour l'attribut lang du HTML
-    document.documentElement.lang = lang;
-    
-    // Régénérer les conférences avec la nouvelle langue
-    if (typeof initializeConferences === 'function') {
-        initializeConferences();
-    }
-    
-    // Régénérer les enseignements avec la nouvelle langue
-    if (typeof initializeTeaching === 'function') {
-        initializeTeaching();
-    }
-    
-    // Révéler le contenu après traduction/initialisation
+
+    // 3. Bouton de langue : affiche la langue courante puis l'autre
+    document.getElementById('currentLang').textContent = lang.toUpperCase();
+    document.querySelector('.alt-lang').textContent = lang === 'fr' ? 'EN' : 'FR';
+    const languageButton = document.getElementById('langBtn');
+    languageButton.title = t('language-button');
+    languageButton.setAttribute('aria-label', languageButton.title);
+
+    saveLanguage(lang);
+
+    // Rend la page visible (elle est masquée au chargement pour éviter un flash de texte non traduit)
     if (window.revealAfterInitialization) {
         window.revealAfterInitialization();
     }
-    
-    // Sauvegarder dans localStorage avec gestion d'erreur
-    try {
-        localStorage.setItem('language', lang);
-        currentLang = lang;
-    } catch (e) {
-        console.warn('Impossible de sauvegarder la langue:', e.message);
-        currentLang = lang;
-    }
 }
 
-// Gestion du bouton de langue - SUPPRIMÉ - fusionné dans initialisation principale
+// ---------------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------------
 
-// Navigation mobile avec vérifications
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
-const navLinks = document.querySelectorAll('.nav-link');
+function setupNavigation() {
+    const navbar = document.querySelector('.navbar');
+    const hamburger = document.querySelector('.hamburger');
+    const navMenu = document.querySelector('.nav-menu');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section[id]');
 
-if (hamburger && navMenu) {
+    // Menu mobile
     hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navMenu.classList.toggle('active');
+        const expanded = navMenu.classList.toggle('active');
+        hamburger.classList.toggle('active', expanded);
+        hamburger.setAttribute('aria-expanded', String(expanded));
     });
-}
 
-// Fermer le menu mobile lors du clic sur un lien
-if (navLinks.length > 0) {
-    navLinks.forEach(link => {
+    // Fermer le menu mobile lors du clic sur un lien
+    navLinks.forEach((link) => {
         link.addEventListener('click', () => {
-            if (hamburger && navMenu) {
-                hamburger.classList.remove('active');
-                navMenu.classList.remove('active');
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+            hamburger.setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    // Souligner dans le menu la section en cours de lecture
+    function setActiveNavLink() {
+        let current = '';
+        sections.forEach((section) => {
+            if (window.scrollY >= section.offsetTop - 200) {
+                current = section.id;
             }
         });
-    });
+        navLinks.forEach((link) => {
+            link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+        });
+    }
+
+    // Barre de navigation légèrement transparente une fois la page défilée
+    function updateNavbarBackground() {
+        if (window.scrollY > 50) {
+            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+            navbar.style.backdropFilter = 'blur(10px)';
+        } else {
+            navbar.style.background = '#ffffff';
+            navbar.style.backdropFilter = 'none';
+        }
+    }
+
+    window.addEventListener('scroll', () => {
+        setActiveNavLink();
+        updateNavbarBackground();
+    }, { passive: true });
+
+    setActiveNavLink();
 }
 
-// Navigation active link
-function setActiveNavLink() {
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-link');
-    
-    let current = '';
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        const sectionHeight = section.clientHeight;
-        if (window.scrollY >= sectionTop - 200) {
-            current = section.getAttribute('id');
-        }
-    });
+// ---------------------------------------------------------------------------
+// Fenêtres « Citation » des publications
+// ---------------------------------------------------------------------------
 
-    navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === '#' + current) {
-            link.classList.add('active');
-        }
+function closeCitationModals() {
+    document.querySelectorAll('.citation-modal').forEach((modal) => {
+        modal.style.display = 'none';
     });
+    document.body.style.overflow = 'auto';
 }
 
-window.addEventListener('scroll', setActiveNavLink, { passive: true });
+// Copie le BibTeX ou l'APA dans le presse-papiers et l'indique sur le bouton
+function copyCitation(button) {
+    const source = document.getElementById(button.dataset.copy);
+    if (!source || button.dataset.copied) return;
 
-// Navbar background sur scroll
-window.addEventListener('scroll', () => {
-    const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
-        navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-        navbar.style.backdropFilter = 'blur(10px)';
-    } else {
-        navbar.style.background = '#ffffff';
-        navbar.style.backdropFilter = 'none';
-    }
-}, { passive: true });
-
-// Animation de fade-in au scroll
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-        }
-    });
-}, observerOptions);
-
-// SUPPRIMÉ - fusionné dans l'initialisation principale
-
-// Smooth scroll pour les liens de navigation
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            const offsetTop = target.offsetTop - 70; // Compensation pour la navbar fixe
-            window.scrollTo({
-                top: offsetTop,
-                behavior: 'smooth'
-            });
-        }
-    });
-});
-
-// SUPPRIMÉ - Lazy loading fusionné dans l'initialisation principale
-
-// Ajouter des animations CSS dynamiques
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(300px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .lazy {
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-    
-    .lazy.loaded {
-        opacity: 1;
-    }
-`;
-document.head.appendChild(style);
-
-// SUPPRIMÉ - Citation Modals fusionné dans l'initialisation principale
-
-// Fonction pour copier dans le presse-papiers
-function copyToClipboard(elementId) {
-    const element = document.getElementById(elementId);
-    if (!element) return;
-
-    // Support textarea/input; otherwise read textContent
-    let textToCopy = '';
-    if ('select' in element) {
-        element.select();
-        element.setSelectionRange(0, 99999);
-        textToCopy = element.value;
-    } else {
-        textToCopy = element.textContent || '';
-    }
-
-    const doFeedback = (btn) => {
-        if (!btn) return;
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Copié!';
-        btn.style.background = 'var(--ai-green)';
+    const showFeedback = () => {
+        const label = button.textContent;
+        button.dataset.copied = 'true';
+        button.textContent = t('citation-copied');
+        button.style.background = 'var(--ai-green)';
         setTimeout(() => {
-            btn.textContent = originalText;
-            btn.style.background = '';
+            button.textContent = label;
+            button.style.background = '';
+            delete button.dataset.copied;
         }, 1500);
     };
-
-    const btn = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('copy-btn')
-        ? document.activeElement
-        : null;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textToCopy).then(() => doFeedback(btn));
-    } else {
+    const copyWithSelection = () => {
         try {
-            document.execCommand('copy');
-            doFeedback(btn);
-        } catch (err) {
-            console.error('Erreur lors de la copie:', err);
+            if (document.execCommand('copy')) showFeedback();
+        } catch (error) {
+            console.error('Erreur lors de la copie :', error);
         }
+    };
+
+    source.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(source.value).then(showFeedback, copyWithSelection);
+    } else {
+        copyWithSelection();
     }
 }
 
-// Initialisation complète
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialiser la traduction avec la langue par défaut
-    translatePage(currentLang);
-    
-    // Configuration du bouton de langue
-    const langBtn = document.getElementById('langBtn');
-    if (langBtn) {
-        langBtn.addEventListener('click', () => {
-            const newLang = currentLang === 'fr' ? 'en' : 'fr';
-            translatePage(newLang);
-        });
-    }
-    
-    // Observer tous les éléments avec la classe fade-in
-    const elementsToAnimate = document.querySelectorAll('.publication-item, .conference-item, .course-item, .responsibility-item, .about-content');
-    elementsToAnimate.forEach(el => {
-        el.classList.add('fade-in');
-        observer.observe(el);
-    });
-    
-    // Lazy loading pour les images
-    const images = document.querySelectorAll('img[data-src]');
-    if (images.length > 0) {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src;
-                    img.removeAttribute('data-src');
-                    observer.unobserve(img);
-                }
-            });
-        });
-        images.forEach(img => imageObserver.observe(img));
-    }
-    
-    // Gestion des modals de citation
-    const citationLinks = document.querySelectorAll('.citation-link');
-    const modals = document.querySelectorAll('.citation-modal');
-    const closeButtons = document.querySelectorAll('.close');
-
-    // Ouvrir les modals
-    citationLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const modalId = link.getAttribute('data-modal');
-            const modal = document.getElementById(modalId);
+// Les fenêtres sont régénérées à chaque changement de langue :
+// les clics sont donc écoutés sur le document entier.
+function setupCitationModals() {
+    document.addEventListener('click', (event) => {
+        const citationLink = event.target.closest('.citation-link');
+        if (citationLink) {
+            event.preventDefault();
+            const modal = document.getElementById(citationLink.dataset.modal);
             if (modal) {
                 modal.style.display = 'block';
                 document.body.style.overflow = 'hidden';
             }
-        });
-    });
+            return;
+        }
 
-    // Fermer les modals
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const modal = button.closest('.citation-modal');
-            if (modal) {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        });
-    });
+        const copyButton = event.target.closest('.copy-btn');
+        if (copyButton) {
+            copyCitation(copyButton);
+            return;
+        }
 
-    // Fermer modal en cliquant à l'extérieur
-    modals.forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        });
-    });
-    
-    // Fermer modal avec Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            modals.forEach(modal => {
-                modal.style.display = 'none';
-            });
-            document.body.style.overflow = 'auto';
+        // Croix de fermeture, ou clic sur le fond grisé autour de la fenêtre
+        if (event.target.closest('.citation-modal .close') || event.target.classList.contains('citation-modal')) {
+            closeCitationModals();
         }
     });
-    
-    // Définir le premier lien comme actif
-    const firstNavLink = document.querySelector('.nav-link');
-    if (firstNavLink) {
-        firstNavLink.classList.add('active');
-    }
-    
-    // Sécurité : révéler le contenu après un délai max
-    // Révéler le site après initialisation complète
-    setTimeout(() => {
-        if (window.revealAfterInitialization) {
-            window.revealAfterInitialization();
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeCitationModals();
         }
-        document.documentElement.style.opacity = '1';
-        document.documentElement.style.visibility = 'visible';
-    }, 150);
-    
-    // Site académique initialisé avec succès!
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Initialisation
+// ---------------------------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+    translatePage(savedLanguage());
+
+    document.getElementById('langBtn').addEventListener('click', () => {
+        translatePage(currentLanguage() === 'fr' ? 'en' : 'fr');
+    });
+
+    document.getElementById('copyright-year').textContent = new Date().getFullYear();
+
+    setupNavigation();
+    setupCitationModals();
 });
