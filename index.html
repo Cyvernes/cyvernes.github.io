@@ -8,68 +8,73 @@
     <meta name="description" content="Clément Yvernes studies which causal effects can be identified with partial knowledge of a system. PhD student in the APTIKAL team at LIG, Université Grenoble Alpes.">
     <meta name="keywords" content="causal inference, causality, machine learning, PhD, research, academic, Grenoble Alpes University">
     <meta name="author" content="Clément Yvernes">
+    <!-- Adresse de référence (mise à jour par script.js selon la langue) et versions française et anglaise -->
     <link rel="canonical" href="https://cyvernes.github.io/">
+    <link rel="alternate" hreflang="en" href="https://cyvernes.github.io/">
+    <link rel="alternate" hreflang="fr" href="https://cyvernes.github.io/?lang=fr">
+    <link rel="alternate" hreflang="x-default" href="https://cyvernes.github.io/">
     <meta name="application-name" content="Clément Yvernes's Personal Website">
     <meta name="apple-mobile-web-app-title" content="Clément Yvernes">
     <meta name="theme-color" content="#1a365d">
-    
-    <!-- Open Graph / Facebook -->
+
+    <!-- Aperçu lors d'un partage (LinkedIn, Facebook, Mastodon…) : l'image doit être un PNG ou un JPEG -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://cyvernes.github.io/">
     <meta property="og:title" content="Clément Yvernes's Personal Website">
     <meta property="og:description" content="Personal academic website of Clément Yvernes, PhD student in Causality at Grenoble Alpes University.">
-    <meta property="og:image" content="https://cyvernes.github.io/images/profile.svg">
+    <meta property="og:image" content="https://cyvernes.github.io/images/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Clément Yvernes, PhD student in causal inference, APTIKAL team, LIG, Université Grenoble Alpes">
     <meta property="og:site_name" content="Clément Yvernes">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://cyvernes.github.io/">
-    <meta property="twitter:title" content="Clément Yvernes's Personal Website">
-    <meta property="twitter:description" content="PhD student in Causality at Grenoble Alpes University. Research in causal inference and causal abstractions.">
-    <meta property="twitter:image" content="https://cyvernes.github.io/images/profile.svg">
-    
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="fr_FR">
+
+    <!-- Aperçu sur X / Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Clément Yvernes's Personal Website">
+    <meta name="twitter:description" content="PhD student in Causality at Grenoble Alpes University. Research in causal inference and causal abstractions.">
+    <meta name="twitter:image" content="https://cyvernes.github.io/images/og-image.png">
+    <meta name="twitter:image:alt" content="Clément Yvernes, PhD student in causal inference, APTIKAL team, LIG, Université Grenoble Alpes">
+
     <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="icon" type="image/x-icon" href="/images/favicon.svg">
     <link rel="manifest" href="/site.webmanifest">
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    
-    <script>
-    // Anti-flash
-    (function() {
-        // Définir la langue au plus tôt depuis localStorage pour éviter tout flash
-        try {
-            var earlyLang = localStorage.getItem('language');
-            if (earlyLang) {
-                document.documentElement.lang = earlyLang;
-            }
-        } catch (e) { /* ignore */ }
 
-        // Cache systématiquement pendant le chargement initial
-        const style = document.createElement('style');
-        style.textContent = 'html { opacity: 0 !important; transition: opacity 0.1s ease-in-out; }';
-        style.id = 'anti-flash-style';
-        document.head.appendChild(style);
-        
-        // Fonction pour révéler après initialisation complète
-        window.revealAfterInitialization = function() {
-            const flashStyle = document.getElementById('anti-flash-style');
-            if (flashStyle) {
-                flashStyle.remove();
+    <!-- Police Inter hébergée sur le site (dossier fonts/) : aucune requête vers Google -->
+    <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="styles.css">
+
+    <script>
+    // Anti-flash. Le texte écrit dans cette page est en anglais. Si elle doit s'afficher en français
+    // (?lang=fr dans l'adresse, ou dernier choix du visiteur), on la masque jusqu'à ce que script.js
+    // l'ait traduite, pour ne pas voir l'anglais apparaître une fraction de seconde.
+    (function () {
+        var lang = null;
+        try {
+            lang = new URLSearchParams(window.location.search).get('lang');
+            if (lang !== 'fr' && lang !== 'en') {
+                lang = localStorage.getItem('language');
             }
-            document.documentElement.style.opacity = '1';
+        } catch (e) { /* adresse ou stockage illisible : anglais */ }
+        if (lang !== 'fr') return; // en anglais, il n'y a rien à traduire : rien à masquer
+
+        document.documentElement.lang = 'fr';
+        var style = document.createElement('style');
+        style.id = 'anti-flash-style';
+        style.textContent = 'html { opacity: 0 !important; }';
+        document.head.appendChild(style);
+
+        // Appelée par script.js une fois la page traduite
+        window.revealAfterInitialization = function () {
+            var flashStyle = document.getElementById('anti-flash-style');
+            if (flashStyle) flashStyle.remove();
         };
 
-        // Sécurité absolue : révéler après 100ms maximum
-        setTimeout(function() {
-            if (window.revealAfterInitialization) {
-                window.revealAfterInitialization();
-            }
-        }, 100);
+        // Sécurité : la page s'affiche quoi qu'il arrive au bout de 800 ms (par exemple si un script ne se charge pas)
+        setTimeout(window.revealAfterInitialization, 800);
     })();
     </script>
     
@@ -109,7 +114,7 @@
             </div>
             <ul id="main-menu" class="nav-menu">
                 <li class="nav-item"><a href="#home" class="nav-link" data-lang="nav-home">Home</a></li>
-                <li class="nav-item"><a href="#publications" class="nav-link" data-lang="menu-research">Research</a></li>
+                <li class="nav-item"><a href="#publications" class="nav-link" data-lang="menu-publications">Publications</a></li>
                 <li class="nav-item"><a href="#conferences" class="nav-link" data-lang="menu-conferences">Presentations</a></li>
                 <li class="nav-item"><a href="#responsibilities" class="nav-link" data-lang="menu-outreach">Outreach</a></li>
                 <li class="nav-item"><a href="#software" class="nav-link" data-lang="menu-software">Software</a></li>
@@ -118,9 +123,11 @@
             </ul>
             <div class="nav-right">
                 <div class="language-switcher">
-                    <button id="langBtn" class="lang-btn" title="Switch to French / Passer en anglais">
+                    <button type="button" id="langBtn" class="lang-btn" title="Switch to French / Passer en anglais">
                         <span id="currentLang">EN</span>
-                        <i class="fas fa-exchange-alt"></i>
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
+                        </svg>
                         <span class="alt-lang">FR</span>
                     </button>
                 </div>
@@ -171,7 +178,7 @@
 
     <section id="publications" class="publications">
         <div class="container">
-            <h2 class="section-title" data-lang="contributions-title">Contributions</h2>
+            <h2 class="section-title" data-lang="publications-title">Publications</h2>
             <div class="publications-list" id="publications-container">
             </div>
         </div>

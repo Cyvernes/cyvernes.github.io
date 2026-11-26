@@ -39,12 +39,12 @@ def main():
     command = [browser, '--headless=new', '--disable-gpu', '--no-first-run',
                '--disable-extensions', '--disable-background-networking', '--no-proxy-server',
                '--enable-logging=stderr', f'--user-data-dir={artifacts / "profile"}',
-               f'--window-size={args.width},{args.height}', '--virtual-time-budget=12000', '--dump-dom']
+               f'--window-size={args.width},{args.height}', '--virtual-time-budget=40000', '--dump-dom']
     if args.screenshot:
         command.append(f'--screenshot={artifacts / "screenshot.png"}')
     command.append(f'http://127.0.0.1:{server.server_port}/{args.page}')
     try:
-        result = subprocess.run(command, capture_output=True, timeout=60,
+        result = subprocess.run(command, capture_output=True, timeout=150,
                                 creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     finally:
         server.shutdown()
@@ -61,6 +61,9 @@ def main():
             print(line)
     print(f'Artifacts: {artifacts}')
     if args.page.startswith('_tests/'):
+        if 'data-test-status=' not in document:
+            # The browser returned the page before the last test finished.
+            print('INCOMPLET : la page n’a pas terminé ses tests (budget --virtual-time-budget épuisé ?).')
         return 0 if 'data-test-status="passed"' in document else 1
     return result.returncode
 

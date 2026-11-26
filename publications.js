@@ -75,7 +75,7 @@ const publications = [
         },
         bibtex: {
             type: "inproceedings",
-            key: "proceedings-v286-yvernes25a",
+            key: "pmlr-v286-yvernes25a",
             booktitle: "Proceedings of the Forty-first Conference on Uncertainty in Artificial Intelligence",
             pages: "4844--4871",
             volume: "286",
@@ -150,14 +150,15 @@ function publicationAuthors(pub) {
     return pub.authors.map(author => author === "Clément Yvernes" ? `<strong>${author}</strong>` : author).join(", ");
 }
 
+// Liens affichés sous chaque publication : [champ de links, icône (voir script.js), libellé, clé de traduction]
 const publicationLinkLabels = [
-    ["proceedings", "fa-book", "Proceedings", "pub-proceedings"],
-    ["pdf", "fa-file-pdf", "PDF"],
-    ["software", "fa-code", "Code"],
-    ["arxiv", "fa-archive", "arXiv"],
-    ["hal", "fa-graduation-cap", "HAL"],
-    ["openreview", "fa-comments", "OpenReview"],
-    ["doi", "fa-external-link-alt", "DOI"]
+    ["proceedings", "book-open", "Proceedings", "pub-proceedings"],
+    ["pdf", "file-text", "PDF"],
+    ["software", "code", "Code"],
+    ["arxiv", "archive", "arXiv"],
+    ["hal", "graduation-cap", "HAL"],
+    ["openreview", "messages-square", "OpenReview"],
+    ["doi", "external-link", "DOI"]
 ];
 
 function generatePublicationHTML(pub, index) {
@@ -165,12 +166,12 @@ function generatePublicationHTML(pub, index) {
     const primaryLinks = [];
     const moreLinks = [];
 
-    for (const [name, icon, label, labelKey] of publicationLinkLabels) {
+    for (const [name, iconName, label, labelKey] of publicationLinkLabels) {
         if (!pub.links[name]) continue;
         const group = name === 'pdf' || name === primarySource ? primaryLinks : moreLinks;
         group.push(`
             <a href="${pub.links[name]}" target="_blank" rel="noopener" class="pub-link">
-                <i class="fas ${icon}" aria-hidden="true"></i>
+                ${icon(iconName)}
                 ${labelKey ? `<span data-lang="${labelKey}">${t(labelKey)}</span>` : label}
             </a>
         `);
@@ -210,8 +211,8 @@ function generatePublicationHTML(pub, index) {
             </div>
             <div class="pub-links">
                 ${primaryLinks.join('')}
-                <button type="button" class="pub-link citation-link" data-modal="citation-modal-${index}">
-                    <i class="fas fa-quote-right" aria-hidden="true"></i> ${t('citation')}
+                <button type="button" class="pub-link citation-link" data-modal="citation-modal-${index}" aria-haspopup="dialog">
+                    ${icon('quote')} ${t('citation')}
                 </button>
                 ${moreMenu}
             </div>
@@ -282,70 +283,80 @@ function generateBibTeX(pub) {
     return bibtex;
 }
 
-// Fonction pour générer la citation APA
-function generateAPA(pub) {
-    const authors = pub.authors.map((author, i) => {
-        const names = author.split(" ");
-        const lastName = names.pop();
-        const initials = names.map(n => n.charAt(0) + ".").join(" ");
+// Auteurs au format APA : « Nom, I., Nom, I., & Nom, I. »
+function apaAuthors(authors) {
+    const names = authors.map(author => {
+        const parts = author.split(" ");
+        const lastName = parts.pop();
+        const initials = parts.map(part => part.charAt(0) + ".").join(" ");
         return `${lastName}, ${initials}`;
-    }).join(", ");
+    });
+    if (names.length === 1) return names[0];
+    return `${names.slice(0, -1).join(", ")}, & ${names[names.length - 1]}`;
+}
+
+// Fonction pour générer la citation APA (7e édition)
+function generateAPA(pub) {
+    const authors = apaAuthors(pub.authors);
 
     if (pub.type === "preprint") {
         return `${authors} (${pub.year}). ${pub.title} [Preprint]. ${pub.venue}. ${pub.links.arxiv}`;
     }
 
-    let apa = `${authors} (${pub.year}). ${pub.title}.`;
-    
-    // Format spécifique PROCEEDINGS
-    if (pub.proceedings) {
-        apa += ` ${pub.bibtex.booktitle}, in ${pub.series}`;
-        if (pub.volume && pub.pages) {
-            apa += ` ${pub.volume}:${pub.pages}`;
+    const title = /[.?!]$/.test(pub.title) ? pub.title : `${pub.title}.`;
+    let apa = `${authors} (${pub.year}). ${title}`;
+
+    // Article dans des actes : « In Actes (Vol. 286, pp. 4844–4871). Éditeur. URL »
+    if (pub.bibtex.type === "inproceedings") {
+        const details = [
+            pub.bibtex.volume && `Vol. ${pub.bibtex.volume}`,
+            pub.bibtex.pages && `pp. ${pub.bibtex.pages.replace(/-+/g, "–")}`
+        ].filter(Boolean).join(", ");
+        apa += ` In ${pub.bibtex.booktitle}${details ? ` (${details})` : ""}.`;
+        if (pub.bibtex.publisher) {
+            apa += ` ${pub.bibtex.publisher}${pub.bibtex.publisher.endsWith(".") ? "" : "."}`;
         }
-        if (pub.links.proceedings) {
-            apa += ` Available from ${pub.links.proceedings}.`;
-        }
-    }
-    // Format général pour les proceedings
-    else if (pub.bibtex.type === "inproceedings") {
-        apa += ` In ${pub.bibtex.booktitle}.`;
-        if (pub.arxivId) {
-            apa += ` arXiv:${pub.arxivId}.`;
-        }
-    } 
-    // Format pour les autres types
-    else {
+    } else {
         apa += ` ${pub.venue}.`;
-        if (pub.arxivId) {
-            apa += ` arXiv:${pub.arxivId}.`;
-        }
     }
 
-    return apa;
+    const url = pub.links.doi || pub.links.proceedings || pub.links.arxiv;
+    return url ? `${apa} ${url}` : apa;
 }
 
-// Fonction pour générer le modal de citation
+// Le BibTeX et l'APA sont insérés comme texte dans la fenêtre : on neutralise & et <
+function escapeHTML(text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+}
+
+// Fenêtre de citation (élément <dialog>, ouvert et fermé par script.js)
 function generateCitationModal(pub, index) {
     const bibtex = generateBibTeX(pub);
     const apa = generateAPA(pub);
 
     return `
-        <div id="citation-modal-${index}" class="citation-modal">
+        <dialog id="citation-modal-${index}" class="citation-modal" aria-labelledby="citation-title-${index}">
             <div class="modal-content">
-                <span class="close">&times;</span>
-                <h3>${t('citation')}</h3>
+                <div class="modal-header">
+                    <div>
+                        <h3 id="citation-title-${index}">${t('citation')}</h3>
+                        <p class="modal-subtitle">${pub.title}</p>
+                    </div>
+                    <button type="button" class="modal-close" aria-label="${t('citation-close')}">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
                 <div class="citation-text">
-                    <p><strong>BibTeX:</strong></p>
-                    <textarea readonly id="bibtex-${index}">${bibtex}</textarea>
+                    <label for="bibtex-${index}">BibTeX</label>
+                    <textarea readonly id="bibtex-${index}" rows="${Math.min(bibtex.split("\n").length, 16)}" spellcheck="false">${escapeHTML(bibtex)}</textarea>
                     <button type="button" class="copy-btn" data-copy="bibtex-${index}">${t('citation-copy-bibtex')}</button>
 
-                    <p><strong>APA:</strong></p>
-                    <textarea readonly id="apa-${index}">${apa}</textarea>
+                    <label for="apa-${index}">APA</label>
+                    <textarea readonly id="apa-${index}" rows="4" spellcheck="false">${escapeHTML(apa)}</textarea>
                     <button type="button" class="copy-btn" data-copy="apa-${index}">${t('citation-copy-apa')}</button>
                 </div>
             </div>
-        </div>
+        </dialog>
     `;
 }
 

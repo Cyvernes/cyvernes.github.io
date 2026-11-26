@@ -17,7 +17,7 @@
 
     // Only the true causal model affects the lights. A learner's arrows never do.
     const exercises = [...model.exercises];
-    const freshSession = exercise => ({ states: model.createNodeStates(exercise), edges: [],
+    const freshSession = exercise => restoreDailyResult(exercise, { states: model.createNodeStates(exercise), edges: [],
         feedback: null, elapsed: 0, startedAt: null, dailyStartedAt: null });
     const sessions = new Map(exercises.map(exercise => [exercise.id, freshSession(exercise)]));
     const nodeElements = new Map();
@@ -64,6 +64,55 @@
             // Keep the clock running in memory when storage is unavailable.
         }
         return now;
+    }
+
+    // A solved daily challenge stays solved until the next day, even after a
+    // reload: its final time and arrows are stored with its start time.
+    // (Function declarations: the sessions created above already need them.)
+    function dailyResultKey(seed) { return `tablette.daily.result.${seed}`; }
+
+    function restoreDailyResult(exercise, current) {
+        if (exercise.id !== 'daily') return current;
+        try {
+            const saved = JSON.parse(localStorage.getItem(dailyResultKey(exercise.seed)));
+            if (!saved || !Number.isFinite(saved.elapsed) || saved.elapsed < 0 || !Array.isArray(saved.edges)) return current;
+            const edges = saved.edges
+                .map(edge => ({ from: Number(edge?.from), to: Number(edge?.to) }))
+                .filter(edge => edge.from !== edge.to && exercise.nodes.includes(edge.from) && exercise.nodes.includes(edge.to));
+            // Only a genuine solution of today's graph is restored.
+            const feedback = model.checkEdges(exercise, edges);
+            if (feedback.correct) Object.assign(current, { edges, feedback, elapsed: saved.elapsed });
+        } catch {
+            // Unreadable or unavailable storage: the challenge starts normally.
+        }
+        return current;
+    }
+
+    function saveDailyResult() {
+        const current = session();
+        if (activeExercise.id !== 'daily' || !current.feedback?.correct) return;
+        try {
+            // Keep the first success of the day, as the first start is kept.
+            const key = dailyResultKey(activeExercise.seed);
+            if (localStorage.getItem(key) === null) {
+                localStorage.setItem(key, JSON.stringify({ elapsed: current.elapsed, edges: current.edges }));
+            }
+        } catch {
+            // Without storage, the result stays visible until the page is closed.
+        }
+    }
+
+    // Past challenges are never shown again: forget their start times and results.
+    function forgetPastDailies() {
+        const today = model.daySeed();
+        try {
+            for (let index = localStorage.length - 1; index >= 0; index--) {
+                const match = /^tablette\.daily\.(?:startedAt|result)\.(\d{8})$/.exec(localStorage.key(index) || '');
+                if (match && Number(match[1]) < today) localStorage.removeItem(match[0]);
+            }
+        } catch {
+            // Storage unavailable: nothing to clean.
+        }
     }
 
     function startDailyClock() {
@@ -713,6 +762,7 @@
         if (activeExercise.id === 'daily') syncClock();
         session().feedback = model.checkEdges(activeExercise, session().edges);
         syncClock();
+        saveDailyResult();
         renderFeedback();
         renderTabs();
         if (!sideHelp.matches) setHelp(false);
@@ -850,6 +900,7 @@
     window.addEventListener('resize', refreshLayout);
     sideHelp.addEventListener('change', refreshLayout);
 
+    forgetPastDailies();
     createTabs();
     selectExercise(activeExercise);
 })();

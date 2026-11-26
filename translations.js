@@ -15,7 +15,7 @@ const translations = {
     fr: {
         // Menu et bouton de langue
         'nav-home': 'Accueil',
-        'menu-research': 'Recherche',
+        'menu-publications': 'Publications',
         'menu-conferences': 'Présentations',
         'menu-outreach': 'Médiation',
         'menu-software': 'Logiciels',
@@ -23,12 +23,16 @@ const translations = {
         'menu-about': 'À propos',
         'language-button': 'Passer en anglais',
 
+        // Titre de l’onglet et description pour les moteurs de recherche
+        'page-title': 'Clément Yvernes · Inférence causale',
+        'page-description': 'Clément Yvernes étudie quels effets causaux peuvent être identifiés avec une connaissance partielle d’un système. Doctorant dans l’équipe APTIKAL du LIG, Université Grenoble Alpes.',
+
         // En-tête
         'hero-affiliation': 'Doctorant dans l’équipe APTIKAL du Laboratoire d’informatique de Grenoble (LIG), à l’Université Grenoble Alpes.',
         'hero-question': 'Comment raisonner causalement avec des connaissances incomplètes ?',
 
-        // Contributions (publications.js)
-        'contributions-title': 'Contributions',
+        // Publications (publications.js)
+        'publications-title': 'Publications',
         'pub-identifiability-status': 'Prépublication · En cours d’évaluation au <cite>Journal of Causal Inference</cite>',
         'workshop-venue': 'Atelier CAR à UAI',
         'pub-proceedings': 'Actes',
@@ -42,6 +46,7 @@ const translations = {
         'citation-copy-bibtex': 'Copier BibTeX',
         'citation-copy-apa': 'Copier APA',
         'citation-copied': '✓ Copié !',
+        'citation-close': 'Fermer',
 
         // Présentations (conferences.js)
         'conferences-title': 'Présentations',
@@ -101,7 +106,7 @@ const translations = {
     en: {
         // Menu et bouton de langue
         'nav-home': 'Home',
-        'menu-research': 'Research',
+        'menu-publications': 'Publications',
         'menu-conferences': 'Presentations',
         'menu-outreach': 'Outreach',
         'menu-software': 'Software',
@@ -109,12 +114,16 @@ const translations = {
         'menu-about': 'About',
         'language-button': 'Switch to French',
 
+        // Titre de l’onglet et description pour les moteurs de recherche
+        'page-title': 'Clément Yvernes · Causal Inference',
+        'page-description': 'Clément Yvernes studies which causal effects can be identified with partial knowledge of a system. PhD student in the APTIKAL team at LIG, Université Grenoble Alpes.',
+
         // En-tête
         'hero-affiliation': 'PhD student in the APTIKAL team at the Grenoble Informatics Laboratory (LIG), Université Grenoble Alpes.',
         'hero-question': 'How can we reason about cause and effect when our knowledge is incomplete?',
 
-        // Contributions (publications.js)
-        'contributions-title': 'Contributions',
+        // Publications (publications.js)
+        'publications-title': 'Publications',
         'pub-identifiability-status': 'Preprint · Under review at the <cite>Journal of Causal Inference</cite>',
         'workshop-venue': 'CAR Workshop at UAI',
         'pub-proceedings': 'Proceedings',
@@ -128,6 +137,7 @@ const translations = {
         'citation-copy-bibtex': 'Copy BibTeX',
         'citation-copy-apa': 'Copy APA',
         'citation-copied': '✓ Copied!',
+        'citation-close': 'Close',
 
         // Présentations (conferences.js)
         'conferences-title': 'Presentations',

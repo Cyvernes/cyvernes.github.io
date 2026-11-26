@@ -656,6 +656,8 @@
                 return frame.contentDocument;
             };
             win.localStorage.removeItem(key);
+            // The daily challenge was solved by earlier tests: forget that success too.
+            win.localStorage.removeItem(`tablette.daily.result.${seed}`);
             const fresh = await reload();
             const hint = fresh.querySelector('#first-steps');
             assert(hint.hidden && !hint.textContent, 'Le guide apparaît après une visite récente.');
@@ -689,6 +691,81 @@
             } finally {
                 win.Date.now = dateNow;
             }
+        });
+        await test('Défi du jour : réussite, temps final et flèches conservés après rechargement', async () => {
+            const seed = win.CausalTablet.daySeed();
+            const startKey = `tablette.daily.startedAt.${seed}`;
+            const resultKey = `tablette.daily.result.${seed}`;
+            const reload = async () => {
+                const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
+                win.location.reload();
+                await loaded;
+                return frame.contentDocument;
+            };
+            frame.style.width = '1100px';
+            frame.style.height = '1400px';
+            win.localStorage.removeItem(resultKey);
+            const startedAt = Date.now() - 83000;
+            win.localStorage.setItem(startKey, String(startedAt));
+            // Keys of past challenges are forgotten at load; today's are kept.
+            win.localStorage.setItem('tablette.daily.startedAt.20000101', '1');
+            win.localStorage.setItem('tablette.daily.result.20000101', '{"elapsed":0,"edges":[]}');
+            let page = await reload();
+            assert(win.localStorage.getItem('tablette.daily.startedAt.20000101') === null
+                && win.localStorage.getItem('tablette.daily.result.20000101') === null, 'Anciens défis non effacés.');
+            assert(Number(win.localStorage.getItem(startKey)) === startedAt, 'Le départ du jour a été effacé.');
+            assert(page.querySelector('#tab-daily .tab-done').hidden, 'Défi coché avant d’être réussi.');
+
+            page.querySelector('#tab-daily').click();
+            const lightIn = id => page.querySelector(`.node-light[data-node="${id}"]`);
+            const drawIn = (from, to) => {
+                const pointer = (type, element) => {
+                    const rect = element.getBoundingClientRect();
+                    return new win.PointerEvent(type, { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2,
+                        bubbles: true, pointerId: 1, button: 0, isPrimary: true });
+                };
+                lightIn(from).dispatchEvent(pointer('pointerdown', lightIn(from)));
+                page.dispatchEvent(pointer('pointermove', lightIn(to)));
+                page.dispatchEvent(pointer('pointerup', lightIn(to)));
+            };
+            const daily = win.CausalTablet.exercises.find(exercise => exercise.id === 'daily');
+            const solution = daily.nodes.flatMap(to => daily.parents[to].map(from => ({ from, to })));
+            solution.forEach(({ from, to }) => drawIn(from, to));
+            page.querySelector('#check-edges').click();
+            assert(page.querySelector('#feedback').classList.contains('is-correct'), 'Défi non résolu.');
+            const finalTime = page.querySelector('#exercise-timer').textContent;
+            const finalSeconds = finalTime.split(':').map(Number).reduce((minutes, seconds) => minutes * 60 + seconds);
+            assert(finalSeconds >= 83 && finalSeconds < 180, `Temps final inattendu : ${finalTime}.`);
+            const saved = JSON.parse(win.localStorage.getItem(resultKey));
+            assert(saved && saved.edges.length === solution.length, 'Réussite non enregistrée.');
+
+            page = await reload();
+            assert(!page.querySelector('#tab-daily .tab-done').hidden, 'Défi réussi non coché après rechargement.');
+            page.querySelector('#tab-daily').click();
+            const timer = () => page.querySelector('#exercise-timer').textContent;
+            assert(timer() === finalTime, `Temps final perdu : ${timer()} au lieu de ${finalTime}.`);
+            assert(page.querySelectorAll('.edge').length === solution.length, 'Flèches non restaurées.');
+            const dateNow = win.Date.now;
+            const later = dateNow.call(win.Date) + 60000;
+            win.Date.now = () => later;
+            try {
+                page.dispatchEvent(new win.Event('visibilitychange'));
+                assert(timer() === finalTime, 'Le chrono repart après rechargement.');
+            } finally {
+                win.Date.now = dateNow;
+            }
+            page.querySelector('#check-edges').click();
+            assert(page.querySelector('#feedback').textContent.includes(finalTime), 'Le résultat restauré n’affiche pas le temps final.');
+
+            // A stored result that does not solve today's graph is ignored.
+            win.localStorage.setItem(resultKey, JSON.stringify({ elapsed: 1000, edges: solution.slice(1) }));
+            page = await reload();
+            assert(page.querySelector('#tab-daily .tab-done').hidden, 'Un résultat incomplet est accepté.');
+            win.localStorage.setItem(resultKey, 'pas du JSON');
+            page = await reload();
+            assert(page.querySelector('#tab-daily .tab-done').hidden && page.querySelectorAll('[role="tab"]').length === 6,
+                'Un résultat illisible bloque la page.');
+            win.localStorage.removeItem(resultKey);
         });
         document.body.dataset.testStatus = failed ? 'failed' : 'passed';
         results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;

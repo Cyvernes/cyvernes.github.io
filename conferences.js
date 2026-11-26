@@ -104,9 +104,9 @@ function initializeConferences() {
     const container = document.getElementById('conferences-container');
     if (!container) return;
 
-    const linkHTML = (url, icon, labelKey) => url ? `
+    const linkHTML = (url, iconName, labelKey) => url ? `
         <a href="${url}" target="_blank" rel="noopener" class="pub-link">
-            <i class="fas ${icon}" aria-hidden="true"></i> ${t(labelKey)}
+            ${icon(iconName)} ${t(labelKey)}
         </a>` : '';
 
     const items = presentations
@@ -114,8 +114,8 @@ function initializeConferences() {
         .sort((a, b) => b.date.localeCompare(a.date))
         .map((p) => {
             const place = [localized(p.venue), localized(p.location)].filter(Boolean).join(', ');
-            const links = linkHTML(p.links?.slides, 'fa-file-pdf', 'pres-slides')
-                + linkHTML(p.links?.poster, 'fa-file-pdf', 'pres-poster-link');
+            const links = linkHTML(p.links?.slides, 'file-text', 'pres-slides')
+                + linkHTML(p.links?.poster, 'file-text', 'pres-poster-link');
             return `
             <article id="${p.id}" class="publication-item">
                 <div class="pub-content">
@@ -123,7 +123,7 @@ function initializeConferences() {
                     <div class="pub-meta">
                         <p class="pub-venue"><time datetime="${p.date}">${p.date.slice(0, 4)}</time> &middot; ${t(p.kind === 'poster' ? 'pres-poster' : 'pres-talk')}</p>
                         <p>${place}</p>
-                        ${p.award ? `<p class="pres-award"><i class="fas fa-award" aria-hidden="true"></i> ${localized(p.award)}</p>` : ''}
+                        ${p.award ? `<p class="pres-award">${icon('award')} ${localized(p.award)}</p>` : ''}
                     </div>
                 </div>
                 ${links ? `<div class="pub-links">${links}</div>` : ''}

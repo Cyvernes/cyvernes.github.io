@@ -14,9 +14,16 @@ Il n'y a rien à compiler : on modifie les fichiers, on pousse sur `main`, et le
 | L'apparence (couleurs, tailles, espacements) | `styles.css` |
 | La structure de la page (ajouter une carte, une section) | `index.html` |
 | Le fonctionnement (changement de langue, menu, fenêtres de citation) | `script.js` |
+| Les icônes des liens (dessins SVG, tirés de [Lucide](https://lucide.dev) et [Tabler](https://tabler.io/icons)) | `script.js`, liste `ICON_PATHS` |
 | La tablette causale | `tablette.html`, `tablette.js`, `tablette-model.js`, `tablette.css` |
 
-Les PDF sont rangés dans `posters/` et `slides/`.
+Les PDF sont rangés dans `posters/` et `slides/`. La police Inter est hébergée dans `fonts/` : le site ne charge rien depuis un autre site.
+
+L'image affichée quand on partage le site (LinkedIn, Mastodon…) est `images/og-image.png` (PNG de 1200 × 630 px) ; l'icône d'écran d'accueil iOS est `images/apple-touch-icon.png` (180 × 180 px). Ces formats doivent rester des PNG : les SVG ne sont pas acceptés.
+
+## Langue
+
+La page s'affiche dans la dernière langue choisie par le visiteur, en anglais par défaut. L'adresse indique la langue affichée : <https://cyvernes.github.io/?lang=fr> ouvre toujours la version française, ce qui permet de partager un lien en français.
 
 ## Modifier un texte
 
@@ -45,4 +52,11 @@ Ouvrir `index.html` dans le navigateur, ou lancer `python -m http.server 8000` �
 
 Si une liste disparaît, son fichier contient une erreur (souvent une apostrophe ou une virgule) : le reste de la page continue de fonctionner, et la console du navigateur (F12) indique le fichier et la ligne.
 
-Les tests de la tablette causale sont décrits dans `_tests/README.md`.
+Des tests automatiques vérifient la page et la tablette (langues, menu, citations, mise en page…). Les lancer avant de pousser une modification du fonctionnement :
+
+```powershell
+python _tests/run_tablette.py --page _tests/site.html
+python _tests/run_tablette.py --page "_tests/tablette.html?ui-only"
+```
+
+Le détail est dans `_tests/README.md`.
