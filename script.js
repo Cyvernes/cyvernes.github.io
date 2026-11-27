@@ -213,14 +213,9 @@ function setupNavigation() {
     }
 
     // Barre de navigation légèrement transparente une fois la page défilée
+    // (couleurs dans styles.css, .navbar.scrolled, pour suivre le mode clair ou sombre)
     function updateNavbarBackground() {
-        if (window.scrollY > 50) {
-            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-            navbar.style.backdropFilter = 'blur(10px)';
-        } else {
-            navbar.style.background = '#ffffff';
-            navbar.style.backdropFilter = 'none';
-        }
+        navbar.classList.toggle('scrolled', window.scrollY > 50);
     }
 
     window.addEventListener('scroll', () => {
@@ -275,7 +270,7 @@ function copyCitation(button) {
         const label = button.textContent;
         button.dataset.copied = 'true';
         button.textContent = t('citation-copied');
-        button.style.background = 'var(--ai-green)';
+        button.style.background = 'var(--success)';
         setTimeout(() => {
             button.textContent = label;
             button.style.background = '';

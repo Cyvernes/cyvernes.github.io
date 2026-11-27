@@ -21,25 +21,56 @@
 
 /* Reset CSS et variables */
 :root {
-    /* Palette : bleu marine (titres, en-tête) et un seul bleu pour les liens,
-       plus un dégradé bleu → terracotta, signature du site (en-tête, logo, soulignement du menu, icônes).
+    /* Toutes les couleurs du site sont ici : le reste du fichier n'utilise que ces variables
+       (à part quelques blancs transparents sur l'en-tête, et le halo terracotta du téléphone).
+       Le mode sombre (plus bas) redéfinit celles qui dépendent du thème. */
+    color-scheme: light dark;
+
+    /* Couleurs de marque, identiques dans les deux thèmes : bleu marine, bleu et terracotta
+       du dégradé signature du site (en-tête, logo, soulignement du menu).
        Le même dégradé est dessiné dans images/favicon.svg, images/profile.svg, favicon.ico,
        images/apple-touch-icon.png et images/og-image.png : changer ces fichiers aussi. */
-    --primary-color: #1a365d;     /* Bleu marine : titres et départ du dégradé de l'en-tête */
-    --secondary-color: #24558b;   /* Bleu des liens et actions (contraste 7,6:1 sur blanc) */
+    --navy: #1a365d;              /* Bleu marine : fond de l'en-tête (et titres en mode clair) */
+    --navy-mid: #22497a;          /* Étape intermédiaire du dégradé de l'en-tête sur téléphone */
     --gradient-blue: #2b6cb0;     /* Bleu du milieu du dégradé (texte blanc lisible : 5,3:1) */
     --gradient-orange: #d99a74;   /* Terracotta doux de fin du dégradé : jamais sous du texte */
-    --ai-green: #38a169;          /* Confirmation « Copié ! » des citations */
 
-    /* Blue-gray neutrals for text and surfaces */
-    --text-dark: #1f2937;         /* Slate 800 */
-    --text-light: #475569;        /* Slate 600 */
+    /* Texte posé sur l'en-tête bleu (identique dans les deux thèmes) */
     --text-white: #ffffff;
-    --bg-white: #ffffff;
-    --bg-light: #f8fafc;          /* Subtle cool light */
+    --on-hero-muted: #e2e8f0;     /* Texte secondaire et liens de l'en-tête */
+    --on-hero-focus: #bfdbfe;     /* Contour de focus sur l'en-tête */
 
-    /* Section alternance */
-    --section-alt: #f8fafc;       /* Light blue-gray for alternating sections */
+    /* En-tête : voile posé sur le dégradé (aucun en mode clair, assombri en mode sombre)
+       et disque du monogramme */
+    --hero-shade: linear-gradient(transparent, transparent);
+    --monogram-bg: var(--on-hero-muted);
+    --monogram-fg: var(--navy);
+    --monogram-ring: transparent;
+
+    /* Couleurs qui dépendent du thème (mode clair) */
+    --primary-color: #1a365d;     /* Titres, section active du menu, départ du dégradé du logo (12:1) */
+    --secondary-color: #24558b;   /* Bleu des liens et actions (contraste 7,6:1 sur blanc) */
+    --on-accent: #ffffff;         /* Texte sur un bouton bleu ou bleu marine */
+    --success: #2f855a;           /* Confirmation « Copié ! » des citations (texte blanc : 4,6:1) */
+    --focus-ring: var(--secondary-color);
+    /* Terracotta pour ce qui est mis en avant sans être un lien : le bleu reste « cliquable »,
+       le terracotta veut dire « à remarquer ». Assombri pour être lisible sur blanc (4,9:1, 4,7:1 sur gris) */
+    --meta-accent: #a65d3a;       /* Ligne « année · type / lieu » des publications, présentations et cours */
+    --award-color: #a65d3a;       /* Prix (« Audience Award ») */
+    --control-border: #1a365d;    /* Contour du bouton de langue */
+    /* Dégradé du logo « CY » et du soulignement du menu : bleu marine → bleu → terracotta */
+    --brand-gradient: linear-gradient(90deg, #1a365d 0%, #2b6cb0 45%, #d99a74 85%);
+
+    /* Neutres gris-bleu pour le texte et les surfaces */
+    --text-dark: #1f2937;         /* Texte courant */
+    --text-light: #475569;        /* Texte secondaire */
+    --bg-white: #ffffff;          /* Fond de page, menu, cartes, fenêtres */
+    --bg-light: #f8fafc;          /* Fond des zones de citation */
+    --section-alt: #f8fafc;       /* Une section sur deux */
+    --border-color: #dbe4ef;      /* Filets et contours (listes, cartes, menu, pied de page) */
+    --hover-bg: #edf4fc;          /* Fond d'un bouton survolé */
+    --navbar-scrolled: rgba(255, 255, 255, 0.95); /* Menu une fois la page défilée */
+    --backdrop: rgba(15, 23, 42, 0.5);            /* Fond grisé derrière les fenêtres */
 
     /* Effects */
     --shadow: 0 4px 12px rgba(26, 54, 93, 0.15);
@@ -55,6 +86,55 @@
 
     /* Hauteur de la barre de menu fixe (utilisée aussi par l'en-tête et les ancres) */
     --nav-height: 52px;
+}
+
+/* Mode sombre, selon le réglage du système du visiteur. L'en-tête garde son dégradé bleu ;
+   le reste passe sur un bleu nuit profond. Comme en mode clair, le texte est neutre (titres
+   presque blancs, texte gris) et le bleu est réservé aux liens : on voit tout de suite ce qui est
+   cliquable. Réglages choisis après un essai à l'écran, y compris par une personne astigmate. */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Textes adoucis pour ne pas « baver » sur le fond sombre, sans descendre sous les
+           seuils de lisibilité. Contrastes mesurés en APCA, plus fiable que le ratio WCAG 2 en mode
+           sombre (ce dernier surestime le contraste) : 75 minimum pour un paragraphe, ~60 pour du petit texte */
+        --primary-color: #dadfe5;     /* Titres, presque blancs (APCA 86) */
+        --secondary-color: #8fb8e8;   /* Liens, bleu clair (8,6:1 sur le fond) */
+        /* Terracotta de la marque, sans assombrissement sur le fond sombre (7,5:1) */
+        --meta-accent: #d99a74;
+        --award-color: #d99a74;
+        --on-accent: #0a101b;
+        --success: #68d391;
+
+        --text-dark: #d0d5db;         /* Texte courant (APCA 80) */
+        --text-light: #b0b5bb;        /* Texte secondaire, gris neutre (APCA 61) */
+        --bg-white: #0a101b;          /* Fond de page, menu, cartes (aussi dans index.html, theme-color) */
+        --bg-light: #141d2e;
+        --section-alt: #0d1422;
+        --border-color: #263650;
+        --hover-bg: #1c2b45;
+        --navbar-scrolled: rgba(10, 16, 27, 0.92);
+        --backdrop: rgba(0, 0, 0, 0.6);
+        --control-border: #3b5072;
+        /* Le bleu marine serait invisible sur le fond sombre, et le bleu clair des titres
+           ferait un départ presque blanc : on part d'un bleu moyen (6:1 sur le fond) vers le terracotta */
+        --brand-gradient: linear-gradient(90deg, #5b9be0 0%, #d99a74 85%);
+
+        /* En-tête plus sombre, pour qu'il ne paraisse pas trop lumineux à côté du fond bleu nuit,
+           et disque du monogramme translucide au lieu d'un disque gris clair */
+        --hero-shade: linear-gradient(rgba(6, 12, 24, 0.32), rgba(6, 12, 24, 0.32));
+        --monogram-bg: rgba(255, 255, 255, 0.08);
+        --monogram-fg: var(--on-hero-muted);
+        --monogram-ring: rgba(255, 255, 255, 0.28);
+
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Contour de focus au clavier, le même partout (l'en-tête bleu a le sien, plus clair) */
+:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
 }
 
 * {
@@ -77,6 +157,7 @@ body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: var(--text-dark);
+    background: var(--bg-white);
 }
 
 /* Icônes (dessinées par la fonction icon() de script.js) : à la taille du texte, de la couleur du texte */
@@ -117,13 +198,20 @@ main > section:not(.hero):nth-of-type(odd) {
 /* Navigation */
 .navbar {
     background-color: var(--bg-white);
-    box-shadow: 0 1px 0 #e2e8f0;
+    backdrop-filter: none;
+    box-shadow: 0 1px 0 var(--border-color);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
     transition: var(--transition);
+}
+
+/* Une fois la page défilée (classe posée par script.js) : menu légèrement transparent */
+.navbar.scrolled {
+    background-color: var(--navbar-scrolled);
+    backdrop-filter: blur(10px);
 }
 
 .nav-container {
@@ -149,7 +237,7 @@ main > section:not(.hero):nth-of-type(odd) {
 
 .lang-btn {
     background: none;
-    border: 1px solid var(--primary-color);
+    border: 1px solid var(--control-border);
     color: var(--primary-color);
     padding: 3px 10px;
     border-radius: 25px;
@@ -166,7 +254,7 @@ main > section:not(.hero):nth-of-type(odd) {
 
 .lang-btn:hover {
     background-color: var(--primary-color);
-    color: var(--text-white);
+    color: var(--on-accent);
 }
 
 .lang-btn .icon {
@@ -199,7 +287,7 @@ main > section:not(.hero):nth-of-type(odd) {
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
     .nav-logo a {
         display: inline-block;
-        background: linear-gradient(90deg, var(--primary-color) 0%, var(--gradient-blue) 45%, var(--gradient-orange) 85%);
+        background: var(--brand-gradient);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -222,11 +310,13 @@ main > section:not(.hero):nth-of-type(odd) {
     position: relative;
 }
 
+/* Section courante : bleu marine des titres (contraste 12:1 sur blanc) */
 .nav-link:hover,
 .nav-link.active {
-    color: var(--secondary-color);
+    color: var(--primary-color);
 }
 
+/* Soulignement : même dégradé que le logo « CY » */
 .nav-link::after {
     content: '';
     position: absolute;
@@ -234,7 +324,7 @@ main > section:not(.hero):nth-of-type(odd) {
     left: 0;
     width: 0;
     height: 2px;
-    background: linear-gradient(90deg, var(--gradient-blue), var(--gradient-orange));
+    background: var(--brand-gradient);
     transition: var(--transition);
 }
 
@@ -269,9 +359,10 @@ main > section:not(.hero):nth-of-type(odd) {
     /* Téléphone et tablette : le texte occupe toute la largeur, l'orange n'est qu'un halo
        dans le coin inférieur droit, sous les liens, pour que tout le texte reste sur le bleu. */
     background:
+        var(--hero-shade),
         radial-gradient(circle at 100% 100%, rgba(217, 154, 116, 0.9) 0, rgba(217, 154, 116, 0) 30%),
-        linear-gradient(115deg, var(--primary-color) 0%, #22497a 55%, var(--gradient-blue) 100%);
-    background-color: var(--primary-color);
+        linear-gradient(115deg, var(--navy) 0%, var(--navy-mid) 55%, var(--gradient-blue) 100%);
+    background-color: var(--navy);
     color: var(--text-white);
 }
 
@@ -279,8 +370,10 @@ main > section:not(.hero):nth-of-type(odd) {
    l'orange arrive derrière et à droite du monogramme (ou de la photo). */
 @media (width > 1020px) {
     .hero {
-        background: linear-gradient(100deg, var(--primary-color) 0%, var(--gradient-blue) 55%, var(--gradient-orange) 100%);
-        background-color: var(--primary-color);
+        background:
+            var(--hero-shade),
+            linear-gradient(100deg, var(--navy) 0%, var(--gradient-blue) 55%, var(--gradient-orange) 100%);
+        background-color: var(--navy);
     }
 }
 
@@ -310,8 +403,9 @@ main > section:not(.hero):nth-of-type(odd) {
     .hero-monogram {
         display: grid;
         place-items: center;
-        background: #e2e8f0;
-        color: var(--primary-color);
+        background: var(--monogram-bg);
+        color: var(--monogram-fg);
+        box-shadow: inset 0 0 0 1px var(--monogram-ring);
         font-size: clamp(2.6rem, 3.6vw, 3.2rem);
         font-weight: 400;
         letter-spacing: 0.04em;
@@ -328,7 +422,7 @@ main > section:not(.hero):nth-of-type(odd) {
 }
 
 .hero-subtitle {
-    color: #e2e8f0;
+    color: var(--on-hero-muted);
     font-size: 0.95rem;
     line-height: 1.55;
     max-width: 63ch;
@@ -356,7 +450,7 @@ main > section:not(.hero):nth-of-type(odd) {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #e2e8f0;
+    color: var(--on-hero-muted);
     font-size: 0.9rem;
 }
 
@@ -381,7 +475,7 @@ main > section:not(.hero):nth-of-type(odd) {
     min-height: 34px;
     padding: 0 0.6rem;
     border-radius: 8px;
-    color: #e2e8f0;
+    color: var(--on-hero-muted);
     font-size: 0.9rem;
     text-decoration: underline;
     text-decoration-color: rgba(255, 255, 255, 0.35);
@@ -400,20 +494,20 @@ main > section:not(.hero):nth-of-type(odd) {
 }
 
 .hero :focus-visible {
-    outline: 2px solid #bfdbfe;
+    outline: 2px solid var(--on-hero-focus);
     outline-offset: 3px;
 }
 
 /* Listes : publications, présentations et cours */
 .publications-list {
-    border-top: 1px solid #dbe4ef;
+    border-top: 1px solid var(--border-color);
 }
 
 .publication-item {
     display: grid;
     gap: 0.5rem;
     padding: 0.625rem 0;
-    border-bottom: 1px solid #dbe4ef;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .pub-content {
@@ -438,7 +532,7 @@ main > section:not(.hero):nth-of-type(odd) {
 }
 
 .pub-venue {
-    color: var(--secondary-color);
+    color: var(--meta-accent);
     font-weight: 600;
 }
 
@@ -480,8 +574,8 @@ main > section:not(.hero):nth-of-type(odd) {
 
 .pub-link:hover,
 .pub-more[open] > .pub-more-toggle {
-    border-color: #d4dfec;
-    background: #edf4fc;
+    border-color: var(--border-color);
+    background: var(--hover-bg);
 }
 
 .pub-more {
@@ -516,7 +610,7 @@ main > section:not(.hero):nth-of-type(odd) {
     display: grid;
     min-width: 8.5rem;
     padding: 0.25rem;
-    border: 1px solid #d4dfec;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     background: var(--bg-white);
     box-shadow: var(--shadow);
@@ -575,7 +669,7 @@ main > section:not(.hero):nth-of-type(odd) {
     min-width: 0;
     padding: clamp(1rem, 2.4vw, 1.65rem);
     background: var(--bg-white);
-    border: 1px solid #dbe4ef;
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
 }
 
@@ -679,7 +773,7 @@ main > section:not(.hero):nth-of-type(odd) {
 /* Footer : discret, comme la barre de menu (fond blanc et filet) */
 .footer {
     background: var(--bg-white);
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--border-color);
     color: var(--text-light);
     font-size: 0.85rem;
     padding: 1.25rem 0;
@@ -687,7 +781,7 @@ main > section:not(.hero):nth-of-type(odd) {
 
 /* Presentations : la liste reprend le style des publications */
 .pres-award {
-    color: var(--primary-color);
+    color: var(--award-color);
     font-weight: 600;
 }
 
@@ -725,9 +819,23 @@ main > section:not(.hero):nth-of-type(odd) {
         visibility: visible;
     }
 
+    /* Lien à la largeur du mot (et non de l'écran), centré : le soulignement reste sous le mot */
     .nav-menu .nav-link {
         display: block;
+        width: fit-content;
+        margin: 0 auto;
         padding: 0.55rem 1rem;
+    }
+
+    /* Soulignement sous le texte seul (sans la marge intérieure), dans le lien et non sur le suivant */
+    .nav-menu .nav-link::after {
+        left: 1rem;
+        bottom: calc(0.55rem - 5px);
+    }
+
+    .nav-menu .nav-link:hover::after,
+    .nav-menu .nav-link.active::after {
+        width: calc(100% - 2rem);
     }
 
     .nav-right {
@@ -771,7 +879,7 @@ main > section:not(.hero):nth-of-type(odd) {
 }
 
 .citation-modal::backdrop {
-    background: rgba(15, 23, 42, 0.5);
+    background: var(--backdrop);
     backdrop-filter: blur(4px);
 }
 
@@ -823,14 +931,8 @@ body:has(.citation-modal[open]) {
 }
 
 .modal-close:hover {
-    background: #edf4fc;
+    background: var(--hover-bg);
     color: var(--primary-color);
-}
-
-.modal-close:focus-visible,
-.copy-btn:focus-visible {
-    outline: 2px solid var(--secondary-color);
-    outline-offset: 2px;
 }
 
 .citation-text label {
@@ -857,7 +959,7 @@ body:has(.citation-modal[open]) {
 
 .copy-btn {
     background: var(--secondary-color);
-    color: var(--text-white);
+    color: var(--on-accent);
     border: none;
     padding: 0.5rem 1rem;
     border-radius: var(--border-radius);
