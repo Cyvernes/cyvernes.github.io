@@ -4,38 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="only dark">
-    <meta name="description" content="Expérimentez sur une tablette causale numérique : intervenez sur les boutons, observez les effets et reconstituez le graphe causal.">
+    <meta name="description" content="Expérimentez sur une tablette causale numérique : intervenez sur les boutons, observez les effets et reconstituez le graphe causal." data-i18n-content="page-description">
     <meta name="theme-color" content="#111f32">
     <title>La tablette causale · Clément Yvernes</title>
     <link rel="icon" href="favicon.ico" sizes="32x32">
     <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
     <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="tablette.css">
+    <!-- Sans JavaScript, le jeu ne peut pas fonctionner : on masque ses commandes, qui ne feraient rien. -->
+    <noscript><style>.game-hud, .tablet-actions { display: none !important; }</style></noscript>
+    <script>
+    // Langue de la page, choisie avant le premier affichage : ?lang=fr ou ?lang=en dans l'adresse,
+    // sinon le dernier choix fait sur le site, sinon la langue du navigateur.
+    // Le texte écrit ci-dessous est en français : en anglais, la page reste masquée jusqu'à sa traduction
+    // par tablette.js (800 ms au plus), pour ne pas voir le français apparaître une fraction de seconde.
+    (function () {
+        var lang = null;
+        try {
+            lang = new URLSearchParams(window.location.search).get('lang');
+            if (lang !== 'fr' && lang !== 'en') lang = localStorage.getItem('language');
+        } catch (e) { /* adresse ou stockage illisible */ }
+        if (lang !== 'fr' && lang !== 'en') lang = /^fr\b/i.test(navigator.language || '') ? 'fr' : 'en';
+        document.documentElement.lang = lang;
+        if (lang === 'fr') return;
+        var style = document.createElement('style');
+        style.id = 'anti-flash-style';
+        style.textContent = 'html { opacity: 0 !important; }';
+        document.head.appendChild(style);
+        window.revealAfterTranslation = function () {
+            var flashStyle = document.getElementById('anti-flash-style');
+            if (flashStyle) flashStyle.remove();
+        };
+        setTimeout(window.revealAfterTranslation, 800);
+    })();
+    </script>
     <script src="tablette-model.js" defer></script>
+    <script src="tablette-translations.js" defer></script>
     <script src="tablette.js" defer></script>
 </head>
 <body>
-    <a class="skip-link" href="#laboratoire">Aller à la tablette</a>
+    <a class="skip-link" href="#laboratoire" data-i18n="skip-link">Aller à la tablette</a>
     <main id="laboratoire">
-        <noscript><p class="no-script">Activez JavaScript pour utiliser cette simulation. Tous les calculs s’effectuent dans votre navigateur.</p></noscript>
+        <noscript><p class="no-script">Activez JavaScript pour utiliser cette simulation. Tous les calculs s’effectuent dans votre navigateur. <a href="index.html?lang=fr">Retour au site</a><br><span lang="en">Enable JavaScript to use this simulation. Everything runs in your browser. <a href="index.html?lang=en">Back to the website</a></span></p></noscript>
         <header class="game-hud" id="game-hud">
             <div class="game-topbar">
-                <a class="back-link" href="index.html" aria-label="Retour au site de Clément Yvernes"><span aria-hidden="true">←</span> Retour</a>
-                <h1 id="page-title">La tablette causale</h1>
-                <button type="button" id="open-help" class="overlay-button" aria-expanded="false" aria-controls="help-panel">Aide <span aria-hidden="true">?</span></button>
+                <a class="back-link" id="back-link" href="index.html" aria-label="Retour au site de Clément Yvernes" data-i18n-aria-label="back-label"><span aria-hidden="true">←</span> <span class="back-text" data-i18n="back">Retour</span></a>
+                <h1 id="page-title" data-i18n="title">La tablette causale</h1>
+                <div class="topbar-actions">
+                    <button type="button" id="language-toggle" class="overlay-button language-toggle" lang="en" aria-label="Switch to English">EN</button>
+                    <button type="button" id="open-help" class="overlay-button" aria-expanded="false" aria-controls="help-panel"><span data-i18n="help">Aide</span> <span aria-hidden="true">?</span></button>
+                </div>
             </div>
-            <div class="exercise-tabs" id="exercise-tabs" role="tablist" aria-label="Choisir un exercice"></div>
+            <div class="exercise-tabs" id="exercise-tabs" role="tablist" aria-label="Choisir un exercice" data-i18n-aria-label="tabs-label"></div>
             <div id="timed-controls" class="timed-controls" hidden>
                 <span id="challenge-date" hidden></span>
-                <span>Chrono · <span id="exercise-timer" role="timer" aria-label="Temps de jeu">00:00</span></span>
+                <span><span data-i18n="timer">Chrono</span> · <span id="exercise-timer" role="timer" aria-label="Temps de jeu">00:00</span></span>
                 <div id="random-controls" class="random-controls" hidden>
                     <fieldset class="random-sizes">
-                        <legend>Nombre de boutons</legend>
+                        <legend data-i18n="random-size">Nombre de boutons</legend>
                         <label><input class="sr-only" type="radio" name="random-size" value="7" checked><span>7</span></label>
                         <label><input class="sr-only" type="radio" name="random-size" value="9"><span>9</span></label>
                         <label><input class="sr-only" type="radio" name="random-size" value="12"><span>12</span></label>
                     </fieldset>
-                    <button type="button" id="new-graph" class="reset-button" title="Tirer un nouveau graphe et remettre le chrono à zéro">Nouveau graphe</button>
+                    <button type="button" id="new-graph" class="reset-button" title="Tirer un nouveau graphe et remettre le chrono à zéro" data-i18n="new-graph" data-i18n-title="new-graph-title">Nouveau graphe</button>
                 </div>
             </div>
             <p id="first-steps" class="first-steps" role="status" aria-live="polite" hidden></p>
@@ -43,8 +74,8 @@
 
         <section id="exercise-panel" class="exercise-panel" role="tabpanel" aria-labelledby="tab-duo" tabindex="0">
                     <h2 id="exercise-title" class="sr-only"></h2>
-                    <div class="board" id="board" aria-label="Boutons de la tablette" aria-describedby="controls-help">
-                        <svg id="connections" class="connections" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Flèches proposées">
+                    <div class="board" id="board" aria-label="Boutons de la tablette" data-i18n-aria-label="board-label" aria-describedby="controls-help">
+                        <svg id="connections" class="connections" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Flèches proposées" data-i18n-aria-label="arrows-label">
                             <defs>
                                 <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#a8c8ff"/></marker>
                                 <marker id="arrow-draft" viewBox="0 0 10 10" refX="10" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f2b66d"/></marker>
@@ -56,63 +87,63 @@
                     </div>
 
                     <div class="tablet-actions">
-                        <div class="reset-actions" role="group" aria-label="Remise à zéro">
-                            <button type="button" id="reset-buttons" class="reset-button" title="Remettre tous les boutons au naturel, sans effacer vos flèches"><span aria-hidden="true">↺</span> Réinitialiser les boutons</button>
-                            <button type="button" id="clear-edges" class="reset-button" disabled><svg class="button-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m14 3 7 7-11 11H6l-4-4L14 3Z"/><path d="m8 9 7 7M10 21h11"/></svg> Effacer les flèches</button>
+                        <div class="reset-actions" role="group" aria-label="Remise à zéro" data-i18n-aria-label="reset-group">
+                            <button type="button" id="reset-buttons" class="reset-button" title="Remettre tous les boutons au naturel, sans effacer vos flèches" data-i18n-title="reset-buttons-title"><span aria-hidden="true">↺</span> <span data-i18n="reset-buttons">Réinitialiser les boutons</span></button>
+                            <button type="button" id="clear-edges" class="reset-button" disabled><svg class="button-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m14 3 7 7-11 11H6l-4-4L14 3Z"/><path d="m8 9 7 7M10 21h11"/></svg> <span data-i18n="clear-edges">Effacer les flèches</span></button>
                         </div>
-                        <button type="button" id="check-edges" class="check-button">Vérifier mes flèches <span aria-hidden="true">→</span></button>
+                        <button type="button" id="check-edges" class="check-button"><span data-i18n="check-edges">Vérifier mes flèches</span> <span aria-hidden="true">→</span></button>
                     </div>
         </section>
-        <aside id="help-panel" class="help-panel" aria-label="Aide du jeu" hidden>
-            <div class="dialog-toolbar"><strong>Aide</strong><div class="panel-controls"><button type="button" id="expand-help" class="dialog-close" aria-expanded="false" aria-controls="help-content">Développer</button><button type="button" id="close-help" class="dialog-close" aria-label="Fermer l’aide">×</button></div></div>
+        <aside id="help-panel" class="help-panel" aria-label="Aide du jeu" data-i18n-aria-label="help-label" hidden>
+            <div class="dialog-toolbar"><strong data-i18n="help">Aide</strong><div class="panel-controls"><button type="button" id="expand-help" class="dialog-close" aria-expanded="false" aria-controls="help-content">Développer</button><button type="button" id="close-help" class="dialog-close" aria-label="Fermer l’aide" data-i18n-aria-label="help-close">×</button></div></div>
             <div class="help-summary">
-                <p class="help-objective"><strong>Objectif</strong> · Découvrir qui agit directement sur qui.</p>
-                <dl class="help-gestures" aria-label="Gestes essentiels">
-                    <div><dt>Double appui</dt><dd>Intervenir / rendre naturel</dd></div>
-                    <div><dt>Appui simple</dt><dd>Allumer / éteindre en intervention</dd></div>
-                    <div><dt>Glisser</dt><dd>Tracer une flèche</dd></div>
+                <p class="help-objective" data-i18n="help-objective"><strong>Objectif</strong> · Découvrir qui agit directement sur qui.</p>
+                <dl class="help-gestures" aria-label="Gestes essentiels" data-i18n-aria-label="help-gestures">
+                    <div><dt data-i18n="gesture-double">Double appui</dt><dd data-i18n="gesture-double-action">Intervenir / rendre naturel</dd></div>
+                    <div><dt data-i18n="gesture-single">Appui simple</dt><dd data-i18n="gesture-single-action">Allumer / éteindre en intervention</dd></div>
+                    <div><dt data-i18n="gesture-drag">Glisser</dt><dd data-i18n="gesture-drag-action">Tracer une flèche</dd></div>
                 </dl>
             </div>
                     <section id="help-content" class="guide-card" aria-labelledby="guide-title">
-                        <h3 id="guide-title">L’objectif</h3>
-                        <p>Découvrez quels boutons agissent <strong>directement</strong> sur les autres. Intervenez sur les boutons, observez lesquels s’allument ou s’éteignent, puis tracez les flèches pour reconstituer les relations cachées.</p>
-                        <p>Quand vous pensez avoir trouvé toutes les relations directes, appuyez sur <strong>Vérifier mes flèches</strong>. Les flèches que vous dessinez sont vos hypothèses : elles ne modifient pas le fonctionnement des boutons.</p>
-                        <h3>Le principe</h3>
-                        <p>Chaque bouton a éventuellement des « parents » : ce sont ses <strong>causes directes</strong>. Au naturel, il s’allume dès qu’au moins un de ses parents est allumé ; sinon, il reste éteint.</p>
-                        <p>En <strong>intervention</strong>, vous coupez l’influence de ses parents et imposez son état. Il continue cependant d’agir sur les boutons dont il est lui-même parent.</p>
-                        <p><strong>Un bouton blanc peut allumer un autre bouton blanc.</strong> C’est son état <strong>allumé</strong> qui agit sur les suivants, qu’il soit naturel ou en intervention. Le rouge et le verrou indiquent seulement que vous imposez son état : un bouton rouge peut être allumé ou éteint.</p>
-                        <div class="legend" aria-label="Couleur et éclairage des boutons">
-                            <span><i class="legend-light natural-off" aria-hidden="true"></i><span>Gris : naturel</span></span>
-                            <span><svg class="legend-symbol" width="12" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><span>Rouge et verrou : intervention</span></span>
-                            <span><span class="legend-symbol" aria-hidden="true">◐</span><span>Sombre : éteint<br>Lumineux : allumé</span></span>
+                        <h3 id="guide-title" data-i18n="help-goal-title">L’objectif</h3>
+                        <p data-i18n="help-goal-1">Découvrez quels boutons agissent <strong>directement</strong> sur les autres. Intervenez sur les boutons, observez lesquels s’allument ou s’éteignent, puis tracez les flèches pour reconstituer les relations cachées.</p>
+                        <p data-i18n="help-goal-2">Quand vous pensez avoir trouvé toutes les relations directes, appuyez sur <strong>Vérifier mes flèches</strong>. Les flèches que vous dessinez sont vos hypothèses : elles ne modifient pas le fonctionnement des boutons.</p>
+                        <h3 data-i18n="help-rule-title">Le principe</h3>
+                        <p data-i18n="help-rule-1">Chaque bouton a éventuellement des « parents » : ce sont ses <strong>causes directes</strong>. Au naturel, il s’allume dès qu’au moins un de ses parents est allumé ; sinon, il reste éteint.</p>
+                        <p data-i18n="help-rule-2">En <strong>intervention</strong>, vous coupez l’influence de ses parents et imposez son état. Il continue cependant d’agir sur les boutons dont il est lui-même parent.</p>
+                        <p data-i18n="help-rule-3"><strong>Un bouton blanc peut allumer un autre bouton blanc.</strong> C’est son état <strong>allumé</strong> qui agit sur les suivants, qu’il soit naturel ou en intervention. Le rouge et le verrou indiquent seulement que vous imposez son état : un bouton rouge peut être allumé ou éteint.</p>
+                        <div class="legend" aria-label="Couleur et éclairage des boutons" data-i18n-aria-label="legend-label">
+                            <span><i class="legend-light natural-off" aria-hidden="true"></i><span data-i18n="legend-natural">Gris : naturel</span></span>
+                            <span><svg class="legend-symbol" width="12" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><span data-i18n="legend-intervention">Rouge et verrou : intervention</span></span>
+                            <span><span class="legend-symbol" aria-hidden="true">◐</span><span data-i18n="legend-light">Sombre : éteint<br>Lumineux : allumé</span></span>
                         </div>
-                        <p>Faites varier les boutons pour découvrir ces relations : une flèche <strong>A → B</strong> signifie que <strong>A est une cause directe de B</strong>.</p>
+                        <p data-i18n="help-arrow">Faites varier les boutons pour découvrir ces relations : une flèche <strong>A → B</strong> signifie que <strong>A est une cause directe de B</strong>.</p>
                         <details>
-                            <summary>Les contrôles</summary>
+                            <summary data-i18n="help-controls-title">Les contrôles</summary>
                             <ul id="controls-help">
-                                <li>Appuyez <strong>deux fois sur un bouton</strong> pour passer en intervention : il devient rouge et affiche un verrou, sans s’allumer ni s’éteindre. Appuyez à nouveau deux fois pour le rendre naturel.</li>
-                                <li>Quand un bouton est en intervention, <strong>appuyez une fois</strong> pour l’allumer ou l’éteindre.</li>
-                                <li>Pour <strong>tracer une flèche</strong>, faites glisser votre doigt ou la souris du bouton de départ jusqu’au bouton d’arrivée.</li>
-                                <li>Pour <strong>supprimer une flèche</strong>, cliquez ou appuyez dessus.</li>
-                                <li><strong>Réinitialiser les boutons</strong> les remet au naturel sans effacer vos flèches. <strong>Effacer les flèches</strong> les supprime sans modifier les boutons.</li>
+                                <li data-i18n="help-control-1">Appuyez <strong>deux fois sur un bouton</strong> pour passer en intervention : il devient rouge et affiche un verrou, sans s’allumer ni s’éteindre. Appuyez à nouveau deux fois pour le rendre naturel.</li>
+                                <li data-i18n="help-control-2">Quand un bouton est en intervention, <strong>appuyez une fois</strong> pour l’allumer ou l’éteindre.</li>
+                                <li data-i18n="help-control-3">Pour <strong>tracer une flèche</strong>, faites glisser votre doigt ou la souris du bouton de départ jusqu’au bouton d’arrivée.</li>
+                                <li data-i18n="help-control-4">Pour <strong>supprimer une flèche</strong>, cliquez ou appuyez dessus.</li>
+                                <li data-i18n="help-control-5"><strong>Réinitialiser les boutons</strong> les remet au naturel sans effacer vos flèches. <strong>Effacer les flèches</strong> les supprime sans modifier les boutons.</li>
                             </ul>
                         </details>
                         <details>
-                            <summary>Les astuces</summary>
+                            <summary data-i18n="help-tips-title">Les astuces</summary>
                             <p id="exercise-description"></p>
                             <ul>
-                                <li><strong>Influences directes et indirectes.</strong> Elles peuvent se combiner. Maintenez un bouton éteint en intervention pour bloquer l’influence qui passe par lui, puis observez les effets qui disparaissent ou persistent.</li>
-                                <li><strong>Causes multiples.</strong> Un bouton peut avoir plusieurs causes : une seule allumée suffit à l’allumer. Testez chaque cause possible séparément, en maintenant les autres éteintes en intervention et en laissant le bouton observé naturel. Vous éviterez ainsi qu’une cause masque l’effet d’une autre.</li>
-                                <li><strong>Position des boutons.</strong> Leur disposition ne donne aucun indice sur les relations à découvrir.</li>
-                                <li><strong>Absence de cycles.</strong> Dans ce jeu, aucune suite de flèches ne peut revenir à son point de départ.</li>
-                                <li><strong>Essais conservés.</strong> Chaque exercice est indépendant ; vous retrouvez vos essais en revenant sur son onglet.</li>
-                                <li><strong>Chrono.</strong> Dans « Pour s’amuser », le chrono tourne pendant que vous jouez sur l’onglet. « Nouveau graphe » remet les essais et le chrono à zéro. Dans « Le défi du jour », le chrono démarre au premier appui sur un bouton du graphe et continue même si vous quittez ou rechargez la page. Les deux chronos s’arrêtent à la réussite. Une fois le défi du jour réussi, votre temps et vos flèches restent affichés jusqu’au lendemain, même après un rechargement.</li>
+                                <li data-i18n="help-tip-1"><strong>Influences directes et indirectes.</strong> Elles peuvent se combiner. Maintenez un bouton éteint en intervention pour bloquer l’influence qui passe par lui, puis observez les effets qui disparaissent ou persistent.</li>
+                                <li data-i18n="help-tip-2"><strong>Causes multiples.</strong> Un bouton peut avoir plusieurs causes : une seule allumée suffit à l’allumer. Testez chaque cause possible séparément, en maintenant les autres éteintes en intervention et en laissant le bouton observé naturel. Vous éviterez ainsi qu’une cause masque l’effet d’une autre.</li>
+                                <li data-i18n="help-tip-3"><strong>Position des boutons.</strong> Leur disposition ne donne aucun indice sur les relations à découvrir.</li>
+                                <li data-i18n="help-tip-4"><strong>Absence de cycles.</strong> Dans ce jeu, aucune suite de flèches ne peut revenir à son point de départ.</li>
+                                <li data-i18n="help-tip-5"><strong>Essais conservés.</strong> Chaque exercice est indépendant ; vous retrouvez vos essais en revenant sur son onglet.</li>
+                                <li data-i18n="help-tip-6"><strong>Chrono.</strong> Dans « Pour s’amuser », le chrono tourne pendant que vous jouez sur l’onglet. « Nouveau graphe » remet les essais et le chrono à zéro. Dans « Le défi du jour », le chrono démarre au premier appui sur un bouton du graphe et continue même si vous quittez ou rechargez la page. Les deux chronos s’arrêtent à la réussite. Une fois le défi du jour réussi, votre temps et vos flèches restent affichés jusqu’au lendemain, même après un rechargement.</li>
                             </ul>
                         </details>
                     </section>
         </aside>
-        <section id="result-panel" class="result-panel" aria-label="Résultat de la vérification" hidden>
-            <button type="button" id="close-result" class="dialog-close result-close" aria-label="Fermer le résultat">×</button>
+        <section id="result-panel" class="result-panel" aria-label="Résultat de la vérification" data-i18n-aria-label="result-label" hidden>
+            <button type="button" id="close-result" class="dialog-close result-close" aria-label="Fermer le résultat" data-i18n-aria-label="result-close">×</button>
             <div id="feedback" class="feedback" role="status" aria-live="polite" hidden></div>
         </section>
         <p id="announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>

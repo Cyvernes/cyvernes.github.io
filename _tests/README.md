@@ -24,6 +24,8 @@ Les tests comparent les 2 250 configurations d’intervention possibles aux tabl
 
 Sans le fichier Arduino, lancer `python _tests/run_tablette.py --page "_tests/tablette.html?ui-only"`. Ce mode ignore explicitement les deux comparaisons Arduino et vérifie le reste : les six exercices, la génération des graphes, la date du défi, les chronos, la réussite du défi conservée après rechargement et les commandes sur ordinateur et téléphone.
 
+Les tests d’interface tournent en français (`tablette.html?lang=fr`). Les derniers vérifient la traduction : mêmes clés et mêmes repères `{…}` dans les deux langues, page, aide, messages et annonces pour lecteurs d’écran entièrement en anglais (aucun mot ni morceau de phrase français), bascule FR / EN en cours de partie, langue choisie au chargement, et barre du haut lisible de 320 à 390 px.
+
 ## Vérification manuelle
 
 Lancer `python -m http.server 8765` et ouvrir `http://localhost:8765/_tests/site.html` ou `http://localhost:8765/_tests/tablette.html`.

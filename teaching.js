@@ -24,8 +24,10 @@ const courses = [
         years: [2024, 2025, 2026],
         institution: {
             fr: "Université Grenoble Alpes",
-            en: "Grenoble Alpes University"
-        }
+            en: "Université Grenoble Alpes"
+        },
+        // Fiche de l'UE (Master Informatique, UFR IM2AG) dans le catalogue des formations de l'UGA
+        website: "https://formations.univ-grenoble-alpes.fr/fr/catalogue-2021/master-XB/master-informatique-IAQK9B8Z/parcours-informatique-classique-1re-annee-IGM7WZRC/ue-introduction-a-l-intelligence-artificielle-et-la-science-des-donnees-KW0NX1C1.html"
     },
     {
         id: "algo_licence",
@@ -44,8 +46,10 @@ const courses = [
         years: [2025],
         institution: {
             fr: "Université Grenoble Alpes",
-            en: "Grenoble Alpes University"
-        }
+            en: "Université Grenoble Alpes"
+        },
+        // Fiche de l'UE INF301 (DLST) dans le catalogue des formations de l'UGA
+        website: "https://formations.univ-grenoble-alpes.fr/plugins/odf-web/odf/_content/course-algorithmique-et-programmation-imperative-3-6/UE%20Algorithmique%20et%20programmation%20imp%C3%A9rative%20-%20INF301%20-.pdf"
     },
     {
         id: "sta301_licence",
@@ -64,8 +68,10 @@ const courses = [
         years: [2026],
         institution: {
             fr: "Université Grenoble Alpes",
-            en: "Grenoble Alpes University"
-        }
+            en: "Université Grenoble Alpes"
+        },
+        // Fiche de l'UE STA301 (DLST) dans le catalogue des formations de l'UGA
+        website: "https://formations.univ-grenoble-alpes.fr/plugins/odf-web/odf/_content/course-methodes-statistiques-pour-la-biologie-2-6/UE%20M%C3%A9thodes%20statistiques%20pour%20la%20biologie%20-%20STA301%20-.pdf"
     },
     {
         id: "causality_summer",

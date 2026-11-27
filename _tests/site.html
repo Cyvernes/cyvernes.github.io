@@ -138,8 +138,10 @@
         await test('Médiation et cours : lien explicite vers la tablette, date, page du cours', async () => {
             for (const language of ['en', 'fr']) {
                 await load('', language);
-                const tablet = doc.querySelector('#fete-science-2025 a[href="tablette.html"]');
+                const tablet = doc.querySelector('#fete-science-2025 a[href^="tablette.html"]');
                 assert(tablet && !/^(here|ici)$/i.test(tablet.textContent.trim()) && tablet.textContent.trim().length > 12, `${language} : lien vers la tablette peu explicite.`);
+                assert(tablet.getAttribute('href') === `tablette.html?lang=${language}`, `${language} : la tablette ne s’ouvre pas dans la langue du site (${tablet.getAttribute('href')}).`);
+                assert(!/in French|en français/i.test(tablet.textContent), `${language} : la tablette est encore annoncée comme uniquement française.`);
                 assert(doc.querySelector('#fete-science-2025 time[datetime="2025-10"]')?.textContent === (language === 'fr' ? 'Octobre 2025' : 'October 2025'), `${language} : date de l’atelier absente.`);
                 const withSite = data('courses.filter(course => course.website)');
                 assert(withSite.length > 0, 'Aucun cours avec page officielle (test à adapter).');

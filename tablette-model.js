@@ -8,12 +8,13 @@
     const parents = Object.freeze(graphIndex.map(start => Object.freeze(graphData.slice(start + 1, start + 1 + graphData[start]))));
 
     // Start with the four connected components, not the physical button layout.
-    // The exercise names deliberately leave the causal structure to discover.
+    // The exercise names (in tablette-translations.js, keyed by id) deliberately
+    // leave the causal structure to discover. The model holds no text.
     const exercises = Object.freeze([
-        { id: 'duo', label: 'Le duo', title: 'Deux boutons, un premier lien.', description: 'Commencez par intervenir sur chacun des boutons. Pouvez-vous trouver lequel agit sur l’autre ?', nodes: [7, 8] },
-        { id: 'trio-1', label: 'Trio I', title: 'Trois boutons à explorer.', description: 'Comparez les effets de vos interventions, seules puis combinées. Quelles relations directes expliquent vos observations ?', nodes: [9, 10, 11] },
-        { id: 'trio-2', label: 'Trio II', title: 'Un autre trio, d’autres effets.', description: 'Observez ce qui change quand vous imposez un état. Tous les effets observés correspondent-ils à une relation directe ?', nodes: [1, 2, 3] },
-        { id: 'reseau', label: 'Le réseau', title: 'À vous de démêler le réseau.', description: 'Sept boutons, plusieurs chemins possibles. Combinez les interventions pour distinguer les causes directes des effets indirects.', nodes: [0, 4, 5, 6, 12, 13, 14] }
+        { id: 'duo', nodes: [7, 8] },
+        { id: 'trio-1', nodes: [9, 10, 11] },
+        { id: 'trio-2', nodes: [1, 2, 3] },
+        { id: 'reseau', nodes: [0, 4, 5, 6, 12, 13, 14] }
     ].map(exercise => Object.freeze({ ...exercise, parents, nodes: Object.freeze(exercise.nodes) })).concat([
         createRandomExercise(), createDailyExercise()
     ]));
@@ -65,18 +66,12 @@
 
     function createRandomExercise(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0], size = 7) {
         const edgeCount = size + Math.floor((size - 7) / 2);
-        return Object.freeze({ id: 'random', label: 'Pour s’amuser', title: 'Un nouveau réseau à explorer.',
-            description: `${size} boutons et un graphe tiré au hasard. Choisissez le nombre de boutons, puis lancez un nouveau graphe pour rejouer.`,
-            timed: true, ...generateGraph(seed, size, edgeCount) });
+        return Object.freeze({ id: 'random', timed: true, ...generateGraph(seed, size, edgeCount) });
     }
 
+    // The seed is the Paris calendar day (YYYYMMDD); the interface formats it as a date.
     function createDailyExercise(date = new Date()) {
-        const seed = daySeed(date);
-        const key = String(seed);
-        return Object.freeze({ id: 'daily', label: 'Le défi du jour', title: 'Neuf boutons pour le défi du jour.',
-            description: 'Neuf boutons, un même défi pour tout le monde. Le graphe change chaque jour à minuit, heure de Paris.',
-            timed: true, dateLabel: `${key.slice(6, 8)}/${key.slice(4, 6)}/${key.slice(0, 4)}`,
-            ...generateGraph(seed, 9, 11) });
+        return Object.freeze({ id: 'daily', timed: true, ...generateGraph(daySeed(date), 9, 11) });
     }
 
     function topologicalOrder(exercise) {

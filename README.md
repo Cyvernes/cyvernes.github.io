@@ -15,7 +15,8 @@ Il n'y a rien à compiler : on modifie les fichiers, on pousse sur `main`, et le
 | La structure de la page (ajouter une carte, une section) | `index.html` |
 | Le fonctionnement (changement de langue, menu, fenêtres de citation) | `script.js` |
 | Les icônes des liens (dessins SVG, tirés de [Lucide](https://lucide.dev) et [Tabler](https://tabler.io/icons)) | `script.js`, liste `ICON_PATHS` |
-| La tablette causale | `tablette.html`, `tablette.js`, `tablette-model.js`, `tablette.css` |
+| Un texte de la tablette causale (aide, boutons, messages, noms des exercices) | `tablette-translations.js` |
+| La tablette causale (structure, fonctionnement, graphes, apparence) | `tablette.html`, `tablette.js`, `tablette-model.js`, `tablette.css` |
 
 Les PDF sont rangés dans `posters/` et `slides/`. La police Inter est hébergée dans `fonts/` : le site ne charge rien depuis un autre site.
 
@@ -24,6 +25,8 @@ L'image affichée quand on partage le site (LinkedIn, Mastodon…) est `images/o
 ## Langue
 
 La page s'affiche dans la dernière langue choisie par le visiteur, en anglais par défaut. L'adresse indique la langue affichée : <https://cyvernes.github.io/?lang=fr> ouvre toujours la version française, ce qui permet de partager un lien en français.
+
+La tablette causale existe aussi en français et en anglais. Elle s'ouvre dans la langue choisie sur le site ; un visiteur qui arrive directement dessus la voit dans la langue de son navigateur. Le bouton FR / EN de sa barre du haut change de langue sans perdre la partie en cours, et <https://cyvernes.github.io/tablette.html?lang=fr> ouvre toujours la version française (pratique pour un atelier). Ses textes sont dans `tablette-translations.js`, sur le même principe que `translations.js`.
 
 ## Modifier un texte
 

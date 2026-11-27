@@ -103,6 +103,11 @@ function translatePage(lang) {
     document.querySelector('meta[name="description"]')?.setAttribute('content', t('page-description'));
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', lang === 'fr' ? `${SITE_URL}?lang=fr` : SITE_URL);
 
+    // La tablette causale s'ouvre dans la langue affichée
+    document.querySelectorAll('a[href^="tablette.html"]').forEach((link) => {
+        link.setAttribute('href', `tablette.html?lang=${lang}`);
+    });
+
     // 4. Bouton de langue : affiche la langue courante puis l'autre
     document.getElementById('currentLang').textContent = lang.toUpperCase();
     document.querySelector('.alt-lang').textContent = lang === 'fr' ? 'EN' : 'FR';

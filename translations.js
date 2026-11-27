@@ -163,7 +163,7 @@ const translations = {
         'date-fete-science': 'October 2025',
         'tablet-title': 'Exploring causality with lights',
         'tablet-outreach': 'Design and delivery of a workshop on causality.',
-        'tablet-cta': 'Try the online version (in French)',
+        'tablet-cta': 'Try the online version',
 
         // Logiciels et projets
         'software-title': 'Software and projects',

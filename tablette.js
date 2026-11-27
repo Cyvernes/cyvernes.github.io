@@ -12,8 +12,79 @@
         'clear-edges', 'check-edges', 'feedback', 'announcement',
         'game-hud', 'open-help', 'close-help', 'help-panel',
         'close-result', 'result-panel', 'expand-help', 'help-content',
-        'timed-controls', 'exercise-timer', 'challenge-date', 'random-controls', 'new-graph'
+        'timed-controls', 'exercise-timer', 'challenge-date', 'random-controls', 'new-graph',
+        'language-toggle', 'back-link'
     ].map(id => [id, byId(id)]));
+
+    // Texts live in tablette-translations.js. The language was chosen before the
+    // first paint by the inline script of tablette.html (address, saved choice,
+    // then browser language); the toggle switches it without reloading.
+    const texts = typeof tabletteTexts !== 'undefined' ? tabletteTexts : { fr: {}, en: {} };
+    if (typeof tabletteTexts === 'undefined') {
+        console.error('tablette-translations.js n’a pas pu être chargé (erreur dans le fichier ?) : la page garde ses textes français.');
+    }
+    let language = document.documentElement.lang === 'en' ? 'en' : 'fr';
+
+    // Text of a key in the current language (French if missing), or null if the key is unknown:
+    // for instance when tablette-translations.js could not be loaded (typing error in the file).
+    function lookup(key) {
+        return texts[language]?.[key] ?? texts.fr?.[key] ?? null;
+    }
+
+    // Text of a key; {name} is replaced by params.name. An unknown key is shown as is.
+    function t(key, params = {}) {
+        return (lookup(key) ?? key).replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
+    }
+
+    function exerciseText(exercise, field) {
+        return t(`exercise-${exercise.id}-${field}`, { size: exercise.nodes.length });
+    }
+
+    // The daily seed is the Paris calendar day, YYYYMMDD.
+    function challengeDate(seed) {
+        const value = String(seed);
+        const [year, month, day] = [value.slice(0, 4), value.slice(4, 6), value.slice(6, 8)];
+        if (language === 'fr') return `${day}/${month}/${year}`;
+        return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+            .format(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+    }
+
+    // Fixed texts of tablette.html: data-i18n (content, may hold HTML) and
+    // data-i18n-aria-label / -title / -content (attributes). A text missing from the
+    // translations leaves the French written in tablette.html in place.
+    function translateStaticTexts() {
+        document.documentElement.lang = language;
+        document.title = lookup('page-title') ?? document.title;
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const text = lookup(element.dataset.i18n);
+            if (text !== null) element.innerHTML = text;
+        });
+        for (const attribute of ['aria-label', 'title', 'content']) {
+            document.querySelectorAll(`[data-i18n-${attribute}]`).forEach(element => {
+                const text = lookup(element.getAttribute(`data-i18n-${attribute}`));
+                if (text !== null) element.setAttribute(attribute, text);
+            });
+        }
+        // The toggle names the other language, in that language.
+        const other = language === 'fr' ? 'en' : 'fr';
+        const toggle = ui['language-toggle'];
+        toggle.textContent = other.toUpperCase();
+        toggle.lang = other;
+        toggle.setAttribute('aria-label', texts[other]?.['language-switch'] ?? other);
+        toggle.title = toggle.getAttribute('aria-label');
+        ui['back-link'].href = `index.html?lang=${language}`;
+    }
+
+    // The address names the language, so a copied link opens the same version.
+    function showLanguageInUrl() {
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', language);
+            if (url.href !== window.location.href) history.replaceState(history.state, '', url.href);
+        } catch {
+            // Address not writable (file opened directly): no consequence.
+        }
+    }
 
     // Only the true causal model affects the lights. A learner's arrows never do.
     const exercises = [...model.exercises];
@@ -133,7 +204,7 @@
         const elapsed = current.elapsed + (current.startedAt === null ? 0 : performance.now() - current.startedAt);
         const seconds = Math.floor(elapsed / 1000);
         ui['exercise-timer'].textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-        ui['exercise-timer'].setAttribute('aria-label', current.feedback?.correct ? 'Temps final' : 'Temps de jeu');
+        ui['exercise-timer'].setAttribute('aria-label', t(current.feedback?.correct ? 'timer-final' : 'timer-running'));
     }
 
     function replaceExercise(exercise) {
@@ -166,7 +237,7 @@
             button.setAttribute('role', 'tab');
             button.setAttribute('aria-controls', 'exercise-panel');
             const label = document.createElement('span');
-            label.textContent = exercise.label;
+            label.className = 'tab-label';
             const done = document.createElement('span');
             done.className = 'tab-done';
             done.textContent = '✓';
@@ -183,8 +254,11 @@
             const button = tabElements.get(exercise.id);
             const selected = exercise === activeExercise;
             const solved = sessions.get(exercise.id).feedback?.correct === true;
+            const label = exerciseText(exercise, 'label');
             button.setAttribute('aria-selected', String(selected));
-            button.setAttribute('aria-label', `Exercice ${index + 1}, ${exercise.label}, ${exercise.nodes.length} boutons${solved ? ', réussi' : ''}`);
+            button.querySelector('.tab-label').textContent = label;
+            button.setAttribute('aria-label', t('tab-label', { number: index + 1, label, count: exercise.nodes.length })
+                + (solved ? t('tab-solved') : ''));
             button.querySelector('.tab-done').hidden = !solved;
         });
     }
@@ -276,14 +350,12 @@
         }
         ui['timed-controls'].hidden = !exercise.timed;
         ui['challenge-date'].hidden = exercise.id !== 'daily';
-        ui['challenge-date'].textContent = exercise.dateLabel ? `Défi du ${exercise.dateLabel}` : '';
         ui['random-controls'].hidden = exercise.id !== 'random';
         syncClock();
         ui['result-panel'].hidden = true;
         ui.board.dataset.exercise = exercise.id;
         ui['exercise-panel'].setAttribute('aria-labelledby', `tab-${exercise.id}`);
-        ui['exercise-title'].textContent = exercise.title;
-        ui['exercise-description'].textContent = exercise.description;
+        renderExerciseTexts();
         gestureNotice = '';
         renderTabs();
         createNodes();
@@ -291,7 +363,16 @@
         renderGuidance();
         layoutBoard();
         renderEdges();
-        announce(`Exercice ${exercises.indexOf(exercise) + 1} : ${exercise.label}. ${exercise.nodes.length} boutons.`);
+        announce(t('announce-exercise', { number: exercises.indexOf(exercise) + 1,
+            label: exerciseText(exercise, 'label'), count: exercise.nodes.length }));
+    }
+
+    // Texts that depend on the active exercise (re-rendered on a language change).
+    function renderExerciseTexts() {
+        ui['challenge-date'].textContent = activeExercise.id === 'daily'
+            ? t('challenge-date', { date: challengeDate(activeExercise.seed) }) : '';
+        ui['exercise-title'].textContent = exerciseText(activeExercise, 'title');
+        ui['exercise-description'].textContent = exerciseText(activeExercise, 'description');
     }
 
     function renderStates() {
@@ -299,13 +380,12 @@
         activeExercise.nodes.forEach(id => {
             const state = current.states[id];
             const element = nodeElements.get(id);
-            const modeName = state.isInterv ? 'Intervention' : 'Naturel';
-            const valueName = state.isOn ? 'allumé' : 'éteint';
             element.light.classList.toggle('is-on', state.isOn);
             element.light.classList.toggle('is-intervention', state.isInterv);
             element.light.setAttribute('aria-pressed', String(state.isOn));
-            element.light.setAttribute('aria-label', `Bouton ${id}, ${modeName.toLowerCase()}, ${valueName}. Appui simple : changer la valeur en intervention. Double appui : changer de mode. Glisser vers un autre bouton : tracer une flèche.`);
-            element.light.title = 'Appui simple : allumer ou éteindre en intervention. Double appui : changer de mode. Glisser : tracer une flèche.';
+            element.light.setAttribute('aria-label', t('light-label', { id,
+                mode: t(state.isInterv ? 'mode-intervention' : 'mode-natural'), value: t(state.isOn ? 'value-on' : 'value-off') }));
+            element.light.title = t('light-title');
         });
     }
 
@@ -315,20 +395,22 @@
         const hasIntervention = activeExercise.nodes.some(id => session().states[id].isInterv);
         if (!discovered.help) {
             step = 'help';
-            message = 'Pour commencer, ouvrez l’aide : vous y trouverez les règles et des astuces.';
+            message = 'guide-help';
         } else if (!discovered.intervention || (!discovered.value && !hasIntervention)) {
             step = 'intervention';
-            message = 'Appuyez deux fois sur un bouton pour intervenir.';
+            message = 'guide-intervention';
         } else if (!discovered.value) {
             step = 'value';
-            message = 'Appuyez une fois sur le bouton rouge pour l’allumer. Observez les autres.';
+            message = 'guide-value';
         } else if (!discovered.arrow) {
             step = 'arrow';
-            message = 'Faites glisser un bouton vers un autre pour proposer une flèche.';
+            message = 'guide-arrow';
         }
         const hint = ui['first-steps'];
         hint.dataset.step = showGuidance ? step : 'done';
-        hint.textContent = showGuidance ? gestureNotice || message : '';
+        // gestureNotice and message are keys, translated at display time.
+        const key = gestureNotice || message;
+        hint.textContent = showGuidance && key ? t(key) : '';
         hint.hidden = !hint.textContent;
         scheduleConnections();
     }
@@ -341,15 +423,15 @@
         gestureNotice = '';
         renderStates();
         renderGuidance();
-        announceStates(`Bouton ${id} ${session().states[id].isInterv ? 'en intervention' : 'rendu naturel'}.`);
+        announceStates(t(session().states[id].isInterv ? 'announce-intervention' : 'announce-natural', { id }));
     }
 
     function changeValue(id) {
         if (!session().states[id].isInterv) {
-            gestureNotice = 'Ce bouton est naturel. Appuyez deux fois dessus pour intervenir.';
+            gestureNotice = 'notice-natural';
             renderGuidance();
-            const status = `Bouton ${id} naturel.`;
-            announce(showGuidance ? `${status} Faites un double appui pour passer en intervention et changer sa valeur.` : status);
+            const status = t('announce-still-natural', { id });
+            announce(showGuidance ? `${status} ${t('announce-still-natural-hint')}` : status);
             return;
         }
         session().states = model.toggleValue(activeExercise, session().states, id);
@@ -357,13 +439,14 @@
         gestureNotice = '';
         renderStates();
         renderGuidance();
-        announceStates(`Valeur du bouton ${id} modifiée.`);
+        announceStates(t('announce-value', { id }));
     }
 
     function announceStates(prefix) {
         const values = activeExercise.nodes.map(id => {
             const state = session().states[id];
-            return `${id} : ${state.isOn ? 'allumé' : 'éteint'}${state.isInterv ? ' en intervention' : ''}`;
+            return t(state.isInterv ? 'announce-state-intervention' : 'announce-state',
+                { id, value: t(state.isOn ? 'value-on' : 'value-off') });
         });
         announce(`${prefix} ${values.join('. ')}.`);
     }
@@ -610,9 +693,9 @@
             const path = route.d;
             const group = document.createElementNS(svgNS, 'g');
             group.setAttribute('class', 'edge');
-            group.setAttribute('aria-label', `Supprimer la flèche ${edge.from} vers ${edge.to}`);
+            group.setAttribute('aria-label', t('edge-label', { from: edge.from, to: edge.to }));
             const title = document.createElementNS(svgNS, 'title');
-            title.textContent = `Supprimer ${edge.from} → ${edge.to}`;
+            title.textContent = t('edge-title', { from: edge.from, to: edge.to });
             const underlay = document.createElementNS(svgNS, 'path');
             underlay.setAttribute('class', 'edge-underlay');
             underlay.setAttribute('d', path);
@@ -644,10 +727,10 @@
     }
 
     function addEdge(from, to) {
-        if (from === to) { announce('Choisissez deux boutons différents.'); return; }
+        if (from === to) { announce(t('announce-same-button')); return; }
         if (!activeExercise.nodes.includes(from) || !activeExercise.nodes.includes(to)) return;
         if (session().edges.some(edge => edge.from === from && edge.to === to)) {
-            announce(`La flèche ${from} vers ${to} existe déjà.`);
+            announce(t('announce-edge-exists', { from, to }));
             return;
         }
         session().edges.push({ from, to });
@@ -657,7 +740,7 @@
         renderEdges();
         renderTabs();
         renderGuidance();
-        announce(`Flèche ajoutée : ${from} vers ${to}.`);
+        announce(t('announce-edge-added', { from, to }));
     }
 
     function removeEdge(from, to) {
@@ -665,7 +748,7 @@
         session().feedback = null;
         renderEdges();
         renderTabs();
-        announce(`Flèche supprimée : ${from} vers ${to}.`);
+        announce(t('announce-edge-removed', { from, to }));
     }
 
     function renderFeedback() {
@@ -677,21 +760,21 @@
         if (!result) return;
         const heading = document.createElement('strong');
         heading.id = 'result-title';
-        heading.textContent = result.correct ? 'Bien joué !' : 'Pas encore…';
+        heading.textContent = t(result.correct ? 'result-correct' : 'result-incorrect');
         const detail = document.createElement('span');
         if (result.correct) {
             const nextExercise = exercises[exercises.indexOf(activeExercise) + 1];
-            detail.textContent = activeExercise.timed ? `Vous avez trouvé toutes les flèches en ${ui['exercise-timer'].textContent}.`
-                : 'Vous avez trouvé toutes les flèches.';
+            detail.textContent = activeExercise.timed ? t('result-found-timed', { time: ui['exercise-timer'].textContent })
+                : t('result-found');
             const reflection = document.createElement('p');
-            reflection.textContent = 'Êtes-vous sûr d’avoir tout testé ou avez-vous eu de la chance ?';
+            reflection.textContent = t('result-reflection');
             ui.feedback.append(heading, detail, reflection);
             if (nextExercise) {
                 const next = document.createElement('button');
                 next.type = 'button';
                 next.id = 'next-level';
                 next.className = 'next-button';
-                next.textContent = 'Niveau suivant →';
+                next.textContent = t('result-next');
                 next.addEventListener('click', () => {
                     ui['result-panel'].hidden = true;
                     selectExercise(nextExercise);
@@ -728,7 +811,7 @@
         ignoreClickUntil = performance.now() + 400;
         const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.node-light');
         if (target && ui.nodes.contains(target)) addEdge(finished.from, Number(target.dataset.node));
-        else announce('Flèche annulée. Déposez-la sur la lumière d’un autre bouton.');
+        else announce(t('announce-edge-cancelled'));
         renderStates();
     });
 
@@ -746,7 +829,7 @@
         gestureNotice = '';
         renderStates();
         renderGuidance();
-        announce('Tous les boutons sont naturels et éteints. Vos flèches sont conservées.');
+        announce(t('announce-reset'));
     });
     ui['clear-edges'].addEventListener('click', () => {
         cancelDraft();
@@ -755,7 +838,7 @@
         renderStates();
         renderEdges();
         renderTabs();
-        announce('Toutes les flèches de cet exercice ont été effacées. Les boutons gardent leur état.');
+        announce(t('announce-cleared'));
     });
     ui['check-edges'].addEventListener('click', () => {
         cancelClicks();
@@ -804,9 +887,39 @@
         scheduleConnections();
     });
 
+    // Switch language without reloading: the game in progress, timers and
+    // arrows stay as they are; every visible or announced text is rendered again.
+    function setLanguage(next) {
+        language = next;
+        try {
+            localStorage.setItem('language', next); // shared with the main site
+        } catch {
+            // Storage unavailable: the choice lasts until the page is closed.
+        }
+        showLanguageInUrl();
+        translateStaticTexts();
+        renderTabs();
+        renderExerciseTexts();
+        renderStates();
+        renderGuidance();
+        syncHelp();
+        syncClock();
+        renderFeedback();
+        refreshLayout();
+        // Replace the last screen-reader announcement, still in the old language.
+        announce(t('announce-exercise', { number: exercises.indexOf(activeExercise) + 1,
+            label: exerciseText(activeExercise, 'label'), count: activeExercise.nodes.length }));
+    }
+
+    ui['language-toggle'].addEventListener('click', () => {
+        cancelClicks();
+        cancelDraft();
+        setLanguage(language === 'fr' ? 'en' : 'fr');
+    });
+
     function syncHelp() {
         const expanded = ui['help-panel'].classList.contains('is-expanded');
-        ui['expand-help'].textContent = expanded ? 'Réduire pour jouer' : 'Développer';
+        ui['expand-help'].textContent = t(expanded ? 'help-collapse' : 'help-expand');
         ui['expand-help'].setAttribute('aria-expanded', String(expanded));
         ui['help-content'].hidden = !sideHelp.matches && !expanded;
     }
@@ -901,6 +1014,10 @@
     sideHelp.addEventListener('change', refreshLayout);
 
     forgetPastDailies();
+    translateStaticTexts();
+    showLanguageInUrl();
     createTabs();
     selectExercise(activeExercise);
+    // Shown once translated (the inline script hides the page in English until then).
+    window.revealAfterTranslation?.();
 })();

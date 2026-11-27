@@ -4,7 +4,7 @@
 <body>
     <h1>Tests de la tablette causale</h1>
     <pre id="results">En cours…</pre>
-    <iframe id="app" src="../tablette.html" title="Page testée" style="width:1100px;height:1400px;border:0"></iframe>
+    <iframe id="app" src="../tablette.html?lang=fr" title="Page testée" style="width:1100px;height:1400px;border:0"></iframe>
     <script>
     /* Open through a static HTTP server. _tests is excluded by Jekyll. */
     (async function () {
@@ -777,6 +777,338 @@
             }
             assert(loaded(), 'Police Inter non chargée.');
             assert(frame.contentWindow.getComputedStyle(page.body).fontFamily.startsWith('Inter'), 'Inter n’est pas la police de la page.');
+        });
+
+        // ------------------------------------------------------------------
+        // Traduction (français / anglais)
+        // ------------------------------------------------------------------
+        const openTablet = async (query, saved = null, width = 1100, height = 1400) => {
+            if (saved === null) localStorage.removeItem('language');
+            else localStorage.setItem('language', saved);
+            frame.style.width = `${width}px`;
+            frame.style.height = `${height}px`;
+            frame.removeAttribute('srcdoc');
+            const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
+            frame.src = `../tablette.html${query}`;
+            await loaded;
+            await settleLayout();
+            return frame.contentDocument;
+        };
+        // Loads a modified copy of tablette.html (same origin, scripts resolved from the site root).
+        const openTabletCopy = async (transform, saved) => {
+            localStorage.setItem('language', saved);
+            const source = await fetch('../tablette.html').then(response => response.text());
+            const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
+            frame.srcdoc = transform(source.replace('<head>', `<head><base href="${new URL('../', location.href).href}">`));
+            await loaded;
+            return frame.contentDocument;
+        };
+        const dictionary = () => frame.contentWindow.eval('tabletteTexts');
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        // Texts a visitor can see or hear: visible text, accessible names, tooltips, page title and description.
+        // The language toggle is excluded: it names the other language, in that language.
+        const readableTexts = page => {
+            const texts = [page.title, page.querySelector('meta[name="description"]').content];
+            const walker = page.createTreeWalker(page.body, NodeFilter.SHOW_TEXT);
+            while (walker.nextNode()) {
+                const parent = walker.currentNode.parentElement;
+                if (!parent.closest('noscript, script, style, #language-toggle')) texts.push(walker.currentNode.textContent);
+            }
+            page.querySelectorAll('[aria-label], [title]').forEach(element => {
+                if (element.id !== 'language-toggle') texts.push(element.getAttribute('aria-label') || '', element.getAttribute('title') || '');
+            });
+            return texts.map(text => text.replace(/Clément/g, '').trim()).filter(Boolean);
+        };
+        const markers = {
+            fr: /[àâçèéêëîïôùûüœ«»]|\b(le|la|les|des|du|une|et|ou|sur|pour|dans|avec|est|sont|vos|votre|vous|au|aux|ce|cette|ces|tous|toutes|aucun|bouton|boutons|flèche|flèches|appui|appuyez|allumer|éteindre|tracer|glisser|vérifier|aide|défi|exercice|naturel|allumé|éteint|chrono|réussi|effacer|réinitialiser|retour)\b/i,
+            en: /\b(the|and|button|buttons|arrow|arrows|tap|drag|help|timer|challenge|done|yet|back|check|clear|reset|natural)\b/i
+        };
+        // Fragments of the other language's sentences (12 characters or more, between {…} marks)
+        // that do not also occur in this language: none of them may appear on the page.
+        const foreignFragments = (all, language) => {
+            const other = language === 'fr' ? 'en' : 'fr';
+            const plain = text => text.replace(/<[^>]+>/g, '');
+            return Object.values(all[other]).flatMap(value => plain(value).split(/\{\w+\}/).map(part => part.trim()))
+                .filter(part => part.length >= 12 && !Object.values(all[language]).some(own => plain(own).includes(part)));
+        };
+        // Texts on the page that belong to the other language (word list, or a fragment of its dictionary).
+        const leftovers = page => {
+            const language = page.documentElement.lang;
+            const other = language === 'fr' ? 'en' : 'fr';
+            const fragments = foreignFragments(dictionary(), language);
+            return readableTexts(page).filter(text => markers[other].test(text) || fragments.some(fragment => text.includes(fragment)));
+        };
+        // A translation key shown as is (mistyped or missing key), e.g. "edge-label": a lowercase
+        // hyphenated token that occurs in no text of the dictionary (unlike "avez-vous").
+        const keyLike = /(?<![\p{L}\d-])[a-z][a-z0-9]*(?:-[a-z0-9]+)+(?![\p{L}\d-])/gu;
+        const rawKeys = page => {
+            const all = dictionary();
+            const allowed = new Set([...Object.values(all.fr), ...Object.values(all.en)].flatMap(value => value.replace(/<[^>]+>/g, ' ').match(keyLike) || []));
+            return readableTexts(page).filter(text => (text.match(keyLike) || []).some(token => !allowed.has(token)));
+        };
+        // Game gestures on the page currently in the frame.
+        const game = () => {
+            const page = frame.contentDocument;
+            const view = frame.contentWindow;
+            const light = id => page.querySelector(`.node-light[data-node="${id}"]`);
+            const pointer = (type, element) => {
+                const rect = element.getBoundingClientRect();
+                return new view.PointerEvent(type, { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2, bubbles: true, pointerId: 1, button: 0, isPrimary: true });
+            };
+            const drag = (from, toElement, at = null) => {
+                light(from).dispatchEvent(pointer('pointerdown', light(from)));
+                page.dispatchEvent(at ? new view.PointerEvent('pointermove', at) : pointer('pointermove', toElement));
+                page.dispatchEvent(at ? new view.PointerEvent('pointerup', at) : pointer('pointerup', toElement));
+            };
+            const solution = index => {
+                const exercise = view.CausalTablet.exercises[index];
+                return exercise.nodes.flatMap(to => exercise.parents[to].map(from => ({ from, to })));
+            };
+            return {
+                page, view, light, drag, solution,
+                tap: id => light(id).dispatchEvent(new view.MouseEvent('click', { detail: 1, bubbles: true })),
+                announcement: () => page.querySelector('#announcement').textContent
+            };
+        };
+        const expectedDate = (view, language) => {
+            const seed = String(view.CausalTablet.daySeed());
+            const [year, month, day] = [seed.slice(0, 4), seed.slice(4, 6), seed.slice(6, 8)];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            return language === 'fr' ? `Défi du ${day}/${month}/${year}` : `Challenge of ${Number(day)} ${months[Number(month) - 1]} ${year}`;
+        };
+
+        await test('Traductions : mêmes clés et repères, toutes les clés utilisées existent, aucun français dans les textes anglais', async () => {
+            const page = await openTablet('?lang=fr', 'fr');
+            const all = dictionary();
+            const onlyOne = Object.keys(all.fr).filter(key => !(key in all.en)).concat(Object.keys(all.en).filter(key => !(key in all.fr)));
+            assert(!onlyOne.length, `Clés présentes dans une seule langue : ${onlyOne.join(', ')}`);
+            const marks = text => (text.match(/\{\w+\}/g) || []).sort().join(',');
+            const differ = Object.keys(all.fr).filter(key => marks(all.fr[key]) !== marks(all.en[key]));
+            assert(!differ.length, `Repères {…} différents : ${differ.join(', ')}`);
+            // Every English value, even those no scenario displays: no French word, and different from French
+            // except for words that are the same in both languages.
+            const sameInBoth = ['exercise-trio-1-label', 'exercise-trio-2-label', 'mode-intervention'];
+            const plain = text => text.replace(/<[^>]+>/g, ' ').replace(/\{\w+\}/g, ' ').replace(/Clément/g, '');
+            const french = Object.keys(all.en).filter(key => markers.fr.test(plain(all.en[key])) || (all.en[key] === all.fr[key] && !sameInBoth.includes(key)));
+            assert(!french.length, `Valeurs anglaises encore en français : ${french.join(', ')}`);
+            // Keys used by tablette.html and tablette.js.
+            const used = [...page.querySelectorAll('[data-i18n]')].map(element => element.dataset.i18n);
+            for (const attribute of ['aria-label', 'title', 'content']) {
+                page.querySelectorAll(`[data-i18n-${attribute}]`).forEach(element => used.push(element.getAttribute(`data-i18n-${attribute}`)));
+            }
+            used.push(...frame.contentWindow.CausalTablet.exercises.flatMap(exercise => ['label', 'title', 'description'].map(field => `exercise-${exercise.id}-${field}`)));
+            const code = await fetch('../tablette.js').then(response => response.text());
+            for (const match of code.matchAll(/\b(?:t|lookup)\(\s*(?:[^'\n]*?\?\s*)?'([a-z0-9-]+)'(?:\s*:\s*'([a-z0-9-]+)')?/g)) used.push(match[1], ...(match[2] ? [match[2]] : []));
+            for (const match of code.matchAll(/\b(?:message|gestureNotice)\s*=\s*'([a-z0-9-]+)'/g)) used.push(match[1]);
+            const expectedFromCode = ['announce-edge-added', 'timer-final', 'timer-running', 'guide-help', 'notice-natural', 'mode-intervention', 'result-incorrect'];
+            assert(expectedFromCode.every(key => used.includes(key)), 'Extraction des clés de tablette.js incomplète : le test est à revoir.');
+            const unknown = [...new Set(used)].filter(key => !(key in all.fr));
+            assert(!unknown.length, `Clés utilisées mais absentes : ${unknown.join(', ')}`);
+            assert(!readableTexts(page).some(text => /\{\w+\}/.test(text)), 'Repère {…} non remplacé dans la page.');
+            assert(!rawKeys(page).length && !leftovers(page).length, `Page française incorrecte : ${[...rawKeys(page), ...leftovers(page)].slice(0, 3).join(' | ')}`);
+        });
+
+        await test('Anglais : page, aide, exercices, messages et annonces entièrement traduits', async () => {
+            await openTablet('?lang=en', 'fr');
+            const { page, view, light, drag, tap, solution, announcement } = game();
+            assert(page.documentElement.lang === 'en' && page.title === 'The causal tablet · Clément Yvernes', `Titre : ${page.title}`);
+            assert(!page.getElementById('anti-flash-style') && view.getComputedStyle(page.documentElement).opacity === '1', 'Page restée masquée.');
+            assert(page.querySelector('#page-title').textContent === 'The causal tablet', 'Titre visible non traduit.');
+            assert(page.querySelector('#back-link .back-text').textContent === 'Back' && page.querySelector('#back-link').getAttribute('aria-label') === 'Back to Clément Yvernes’s website', 'Lien de retour non traduit.');
+            assert(page.querySelector('#back-link').getAttribute('href') === 'index.html?lang=en', 'Le retour ne garde pas la langue.');
+            assert([...page.querySelectorAll('.tab-label')].map(label => label.textContent).join('|') === 'The duo|Trio I|Trio II|The network|Just for fun|Daily challenge', 'Onglets non traduits.');
+            assert(page.querySelector('#tab-duo').getAttribute('aria-label') === 'Exercise 1, The duo, 2 buttons', 'Nom accessible de l’onglet non traduit.');
+            assert(page.querySelector('#check-edges').textContent.includes('Check my arrows'), 'Bouton de vérification non traduit.');
+            const toggle = page.querySelector('#language-toggle');
+            assert(toggle.textContent === 'FR' && toggle.lang === 'fr' && toggle.getAttribute('aria-label') === 'Passer en français', 'Bouton de langue incorrect.');
+
+            assert(light(7).getAttribute('aria-label').startsWith('Button 7, natural, off. Single tap:'), `Bouton : ${light(7).getAttribute('aria-label')}`);
+            assert(light(7).title === dictionary().en['light-title'], `Infobulle : ${light(7).title}`);
+            tap(7); tap(7);
+            assert(announcement().startsWith('Button 7 under intervention.') && announcement().includes('7: off, under intervention'), `Annonce : ${announcement()}`);
+            light(7).click();
+            assert(announcement().startsWith('Button 7 value changed.') && announcement().includes('7: on, under intervention'), `Annonce : ${announcement()}`);
+            assert(light(7).getAttribute('aria-label').startsWith('Button 7, intervention, on.'), 'État du bouton non traduit.');
+            light(8).click();
+            assert(announcement().startsWith('Button 8 is natural.'), `Annonce : ${announcement()}`);
+
+            await wait(410);
+            const [first] = solution(0);
+            solution(0).forEach(({ from, to }) => {
+                drag(from, light(to));
+                assert(announcement() === `Arrow added: ${from} to ${to}.`, `Annonce : ${announcement()}`);
+                assert(page.querySelector(`.edge[aria-label="Remove the arrow from ${from} to ${to}"]`), 'Flèche sans nom anglais.');
+                assert(page.querySelector('.edge title').textContent === `Remove ${from} → ${to}`, 'Infobulle de flèche non traduite.');
+            });
+            // Every other arrow message: duplicate, same button, dropped outside, removal.
+            drag(first.from, light(first.to));
+            assert(announcement() === `The arrow from ${first.from} to ${first.to} already exists.`, `Annonce : ${announcement()}`);
+            const self = light(first.from).getBoundingClientRect();
+            drag(first.from, null, { clientX: self.left + self.width / 2 + 12, clientY: self.top + self.height / 2, bubbles: true, pointerId: 1, button: 0 });
+            assert(announcement() === 'Choose two different buttons.', `Annonce : ${announcement()}`);
+            const board = page.querySelector('#board').getBoundingClientRect();
+            drag(first.from, null, { clientX: board.left + 6, clientY: board.top + board.height / 2, bubbles: true, pointerId: 1, button: 0 });
+            assert(announcement() === 'Arrow cancelled. Drop it on the light of another button.', `Annonce : ${announcement()}`);
+            page.querySelector(`.edge[aria-label="Remove the arrow from ${first.from} to ${first.to}"]`).dispatchEvent(new view.MouseEvent('click', { bubbles: true }));
+            assert(announcement() === `Arrow removed: ${first.from} to ${first.to}.`, `Annonce : ${announcement()}`);
+            page.querySelector('#check-edges').click();
+            assert(page.querySelector('#feedback').textContent === 'Not yet…', `Résultat : ${page.querySelector('#feedback').textContent}`);
+            page.querySelector('#close-result').click();
+            await wait(410);
+            drag(first.from, light(first.to));
+            page.querySelector('#reset-buttons').click();
+            assert(announcement() === 'All buttons are natural and off. Your arrows are kept.', `Annonce : ${announcement()}`);
+            page.querySelector('#tab-trio-1').click();
+            assert(announcement() === 'Exercise 2: Trio I. 3 buttons.', `Annonce : ${announcement()}`);
+            const [trioEdge] = solution(1);
+            drag(trioEdge.from, light(trioEdge.to));
+            page.querySelector('#clear-edges').click();
+            assert(announcement() === 'All the arrows of this exercise have been erased. The buttons keep their state.', `Annonce : ${announcement()}`);
+            page.querySelector('#tab-duo').click();
+            page.querySelector('#check-edges').click();
+            const feedback = page.querySelector('#feedback').textContent;
+            assert(feedback.includes('Well done!') && feedback.includes('Are you sure you tested everything, or were you lucky?'), `Résultat : ${feedback}`);
+            assert(page.querySelector('#next-level').textContent === 'Next level →', 'Niveau suivant non traduit.');
+            assert(page.querySelector('#tab-duo').getAttribute('aria-label').endsWith(', solved'), 'Réussite non annoncée en anglais.');
+
+            page.querySelector('#open-help').click();
+            assert(page.querySelector('#help-content h3').textContent === 'The goal', 'Aide non traduite.');
+            page.querySelector('#close-help').click();
+            page.querySelector('#tab-daily').click();
+            assert(page.querySelector('#challenge-date').textContent === expectedDate(view, 'en'), `Date du défi : ${page.querySelector('#challenge-date').textContent}`);
+            assert(page.querySelector('#exercise-timer').getAttribute('aria-label') === 'Playing time', 'Chrono non traduit.');
+            page.querySelector('#tab-random').click();
+            assert(page.querySelector('#exercise-description').textContent.startsWith('7 buttons and a randomly drawn graph.'), 'Description avec nombre non traduite.');
+            const wrong = [...leftovers(page), ...rawKeys(page)];
+            assert(!wrong.length, `Texte encore en français ou clé brute : ${wrong.slice(0, 3).join(' | ')}`);
+        });
+
+        await test('Bouton de langue : bascule en direct dans les deux sens, mémorisée, sans perdre la partie', async () => {
+            // Show the first-steps banner (old visit) and play in English before switching.
+            localStorage.setItem('tablette.lastVisit', String(Date.now() - 8 * 24 * 60 * 60 * 1000));
+            await openTablet('?lang=en', 'en');
+            const { page, view, light, drag, solution, announcement } = game();
+            await wait(410);
+            solution(0).forEach(({ from, to }) => drag(from, light(to)));
+            page.querySelector('#check-edges').click();
+            page.querySelector('#open-help').click(); // opening the help clears the gesture notice: open it first
+            light(solution(0)[0].from).click(); // natural button: gesture notice in the banner
+            const edges = page.querySelectorAll('.edge').length;
+            assert(edges > 0 && !page.querySelector('#result-panel').hidden && !page.querySelector('#first-steps').hidden, 'État de départ incomplet.');
+            assert(page.querySelector('#first-steps').textContent === dictionary().en['notice-natural'], `Bandeau : ${page.querySelector('#first-steps').textContent}`);
+
+            const checkFrench = where => {
+                assert(page.documentElement.lang === 'fr' && page.querySelector('#page-title').textContent === 'La tablette causale', `${where} : passage en français raté.`);
+                const wrong = [...leftovers(page), ...rawKeys(page)];
+                assert(!wrong.length, `${where} : texte resté en anglais ou clé brute : ${wrong.slice(0, 3).join(' | ')}`);
+            };
+            const checkEnglish = where => {
+                assert(page.documentElement.lang === 'en' && page.querySelector('#page-title').textContent === 'The causal tablet', `${where} : passage en anglais raté.`);
+                const wrong = [...leftovers(page), ...rawKeys(page)];
+                assert(!wrong.length, `${where} : texte resté en français ou clé brute : ${wrong.slice(0, 3).join(' | ')}`);
+            };
+
+            page.querySelector('#language-toggle').click();
+            checkFrench('Duo réussi');
+            assert(page.querySelector('#tab-duo .tab-label').textContent === 'Le duo' && page.querySelector('#tab-duo').getAttribute('aria-label').endsWith(', réussi'), 'Onglets non retraduits.');
+            assert(page.querySelectorAll('.edge').length === edges && page.querySelector('.edge').getAttribute('aria-label').startsWith('Supprimer la flèche'), 'Flèches perdues ou non retraduites.');
+            assert(page.querySelector('.node-light').getAttribute('aria-label').startsWith('Bouton '), 'Boutons non retraduits.');
+            assert(page.querySelector('#feedback').textContent.includes('Bien joué !') && !page.querySelector('#result-panel').hidden, 'Résultat perdu ou non retraduit.');
+            assert(page.querySelector('#first-steps').textContent === dictionary().fr['notice-natural'], 'Bandeau non retraduit.');
+            assert(page.querySelector('#help-content h3').textContent === 'L’objectif' && !page.querySelector('#help-panel').hidden, 'Aide fermée ou non retraduite.');
+            assert(announcement() === 'Exercice 1 : Le duo. 2 boutons.', `Annonce restée dans l’ancienne langue : ${announcement()}`);
+            assert(new URL(view.location.href).searchParams.get('lang') === 'fr' && localStorage.getItem('language') === 'fr', 'Choix non mémorisé ou absent de l’adresse.');
+            assert(page.querySelector('#back-link').getAttribute('href') === 'index.html?lang=fr', 'Lien de retour non mis à jour.');
+            const toggle = page.querySelector('#language-toggle');
+            assert(toggle.textContent === 'EN' && toggle.lang === 'en' && toggle.getAttribute('aria-label') === 'Switch to English', 'Bouton de langue non mis à jour.');
+
+            page.querySelector('#tab-daily').click();
+            assert(page.querySelector('#challenge-date').textContent === expectedDate(view, 'fr'), `Date du défi : ${page.querySelector('#challenge-date').textContent}`);
+            page.querySelector('#language-toggle').click();
+            checkEnglish('Défi du jour');
+            assert(page.querySelector('#challenge-date').textContent === expectedDate(view, 'en'), `Date du défi : ${page.querySelector('#challenge-date').textContent}`);
+            assert(announcement() === 'Exercise 6: Daily challenge. 9 buttons.', `Annonce : ${announcement()}`);
+            page.querySelector('#tab-duo').click();
+            assert(page.querySelectorAll('.edge').length === edges, 'Partie perdue après deux bascules.');
+            page.querySelector('#language-toggle').click();
+            checkFrench('Retour au duo');
+        });
+
+        await test('Langue au chargement : adresse, puis choix mémorisé, puis langue du navigateur', async () => {
+            let page = await openTablet('', 'en');
+            assert(page.documentElement.lang === 'en' && new URL(frame.contentWindow.location.href).searchParams.get('lang') === 'en', 'Choix « en » du site ignoré.');
+            page = await openTablet('', 'fr');
+            assert(page.documentElement.lang === 'fr' && page.querySelector('#page-title').textContent === 'La tablette causale', 'Choix « fr » du site ignoré.');
+            page = await openTablet('?lang=en', 'fr');
+            assert(page.documentElement.lang === 'en', '?lang=en ne prime pas sur le choix mémorisé.');
+            page = await openTablet('?lang=de', 'en');
+            assert(page.documentElement.lang === 'en', 'Valeur ?lang inconnue : choix mémorisé « en » ignoré.');
+            page = await openTablet('?lang=de', 'fr');
+            assert(page.documentElement.lang === 'fr', 'Valeur ?lang inconnue : choix mémorisé « fr » ignoré.');
+            page = await openTablet('', null);
+            const expected = /^fr\b/i.test(frame.contentWindow.navigator.language || '') ? 'fr' : 'en';
+            assert(page.documentElement.lang === expected, `Sans choix, la langue du navigateur (${frame.contentWindow.navigator.language}) n’est pas suivie.`);
+        });
+
+        await test('Anti-flash : page masquée en anglais jusqu’à sa traduction (800 ms au plus), jamais en français', async () => {
+            // Copy without tablette.js: nothing translates the page, only the inline script runs.
+            const withoutGame = source => source.replace('<script src="tablette.js" defer><\/script>', '');
+            let page = await openTabletCopy(withoutGame, 'en');
+            assert(page.getElementById('anti-flash-style') && frame.contentWindow.getComputedStyle(page.documentElement).opacity === '0', 'Page non masquée en anglais avant traduction.');
+            await wait(900);
+            assert(!page.getElementById('anti-flash-style') && frame.contentWindow.getComputedStyle(page.documentElement).opacity === '1', 'Page restée masquée au-delà de 800 ms.');
+            page = await openTabletCopy(withoutGame, 'fr');
+            assert(!page.getElementById('anti-flash-style') && frame.contentWindow.revealAfterTranslation === undefined, 'Page masquée en français.');
+        });
+
+        await test('Fichier de traductions illisible : la page garde son texte français, sans clé brute', async () => {
+            // Simulates an error in tablette-translations.js (e.g. a straight apostrophe): the file is not loaded.
+            const page = await openTabletCopy(source => source.replace('<script src="tablette-translations.js" defer><\/script>', ''), 'en');
+            await wait(100);
+            assert(frame.contentWindow.getComputedStyle(page.documentElement).opacity === '1', 'Page restée masquée.');
+            assert(page.querySelector('#page-title').textContent === 'La tablette causale' && page.querySelector('#check-edges').textContent.includes('Vérifier mes flèches'), 'Textes de la page remplacés.');
+            assert(page.querySelector('#help-content h3').textContent === 'L’objectif' && page.querySelector('#back-link').getAttribute('aria-label') === 'Retour au site de Clément Yvernes', 'Aide ou noms accessibles remplacés.');
+            assert(page.querySelectorAll('.node-light').length === 2, 'Le jeu ne démarre plus.');
+            frame.removeAttribute('srcdoc');
+        });
+
+        await test('Sans JavaScript : message bilingue avec lien de retour, commandes inutiles masquées', async () => {
+            // A sandbox without allow-scripts runs the page exactly as a browser with JavaScript blocked.
+            const blocked = document.createElement('iframe');
+            blocked.setAttribute('sandbox', 'allow-same-origin');
+            blocked.style.cssText = 'position:fixed;top:0;left:0;width:1100px;height:700px;border:0';
+            const loaded = new Promise(resolve => blocked.addEventListener('load', resolve, { once: true }));
+            blocked.src = '../tablette.html?lang=en';
+            document.body.append(blocked);
+            await loaded;
+            try {
+                const page = blocked.contentDocument;
+                const style = element => blocked.contentWindow.getComputedStyle(element);
+                const message = page.querySelector('.no-script');
+                assert(message && style(message).display !== 'none' && message.getBoundingClientRect().height > 0, 'Message absent.');
+                assert(message.textContent.includes('Activez JavaScript') && message.textContent.includes('Enable JavaScript'), 'Message non bilingue.');
+                const links = [...message.querySelectorAll('a')].map(link => link.getAttribute('href'));
+                assert(links.includes('index.html?lang=fr') && links.includes('index.html?lang=en'), `Liens de retour : ${links.join(', ')}`);
+                assert(style(page.querySelector('.tablet-actions')).display === 'none' && style(page.querySelector('.game-hud')).display === 'none', 'Commandes inutiles encore affichées.');
+                assert(!page.getElementById('anti-flash-style') && style(page.documentElement).opacity === '1', 'Page masquée sans JavaScript.');
+            } finally {
+                blocked.remove();
+            }
+        });
+
+        await test('Barre du haut : retour, titre, langue et aide visibles sans chevauchement de 320 à 390 px', async () => {
+            for (const language of ['fr', 'en']) {
+                const page = await openTablet(`?lang=${language}`, language, 320, 700);
+                for (const width of [320, 360, 390]) {
+                    frame.style.width = `${width}px`;
+                    await settleLayout();
+                    assert(page.documentElement.scrollWidth <= width, `${language} ${width}px : débordement (${page.documentElement.scrollWidth}px).`);
+                    const boxes = ['#back-link', '#page-title', '#language-toggle', '#open-help'].map(selector => page.querySelector(selector).getBoundingClientRect());
+                    assert(boxes.every(box => box.width > 0 && box.left >= 0 && box.right <= width), `${language} ${width}px : élément de la barre hors écran.`);
+                    assert(boxes.every((box, index) => index === 0 || boxes[index - 1].right <= box.left), `${language} ${width}px : éléments de la barre qui se chevauchent.`);
+                    assert(boxes[2].width >= 44 && boxes[2].height >= 44, `${language} ${width}px : bouton de langue trop petit au toucher.`);
+                }
+            }
         });
         document.body.dataset.testStatus = failed ? 'failed' : 'passed';
         results.textContent = `${passed} passed, ${failed} failed\n${messages.join('\n')}`;
