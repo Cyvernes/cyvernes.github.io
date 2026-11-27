@@ -393,10 +393,15 @@ main > section:not(.hero):nth-of-type(odd) {
     .hero-portrait {
         display: block;
         flex: none;
-        width: clamp(140px, 12vw, 164px);
+        /* Au maximum, le disque a la hauteur du bloc de texte. Sur écran ×2, 220px demande
+           440px de photo : la largeur de images/portrait.png, à ne pas dépasser sans une photo plus grande. */
+        width: clamp(176px, 16vw, 220px);
         aspect-ratio: 1;
         border-radius: 50%;
         object-fit: cover;
+        /* Photo plus haute que large : on garde le haut pour que la tête entre en entier
+           dans le disque. À revoir si la photo change de cadrage. */
+        object-position: 50% 0%;
     }
 
     /* Monogramme provisoire, en attendant la photo */
