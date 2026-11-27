@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="320" height="320" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Clément Yvernes">
-  <circle cx="160" cy="160" r="160" fill="#1a365d"/>
+  <defs>
+    <!-- Dégradé signature du site : bleu marine → bleu → terracotta (même teinte que styles.css) -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a365d"/>
+      <stop offset="55%" stop-color="#2b6cb0"/>
+      <stop offset="100%" stop-color="#d99a74"/>
+    </linearGradient>
+  </defs>
+  <circle cx="160" cy="160" r="160" fill="url(#bg)"/>
   <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle"
         font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="110" font-weight="600"
         fill="#ffffff">CY</text>

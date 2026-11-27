@@ -128,7 +128,8 @@
             assert(ico.naturalWidth >= 16, 'favicon.ico illisible.');
             for (const svg of ['../images/favicon.svg', '../images/profile.svg']) {
                 const source = await fetch(svg).then(response => response.text());
-                assert(source.includes('#1a365d') && !source.includes('#ed8936'), `${svg} : couleurs hors palette.`);
+                // Dégradé signature du site : bleu marine → bleu → orange
+                assert(['#1a365d', '#2b6cb0', '#d99a74'].every(color => source.includes(color)), `${svg} : dégradé du site absent.`);
             }
             const robots = await fetch('../robots.txt').then(response => response.text());
             assert(robots.includes('Sitemap: https://cyvernes.github.io/sitemap.xml'), 'Sitemap non déclaré dans robots.txt.');

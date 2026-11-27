@@ -21,9 +21,14 @@
 
 /* Reset CSS et variables */
 :root {
-    /* Palette : bleu marine (titres, en-tête) et un seul bleu pour les liens */
-    --primary-color: #1a365d;     /* Bleu marine : titres et fond de l'en-tête */
+    /* Palette : bleu marine (titres, en-tête) et un seul bleu pour les liens,
+       plus un dégradé bleu → terracotta, signature du site (en-tête, logo, soulignement du menu, icônes).
+       Le même dégradé est dessiné dans images/favicon.svg, images/profile.svg, favicon.ico,
+       images/apple-touch-icon.png et images/og-image.png : changer ces fichiers aussi. */
+    --primary-color: #1a365d;     /* Bleu marine : titres et départ du dégradé de l'en-tête */
     --secondary-color: #24558b;   /* Bleu des liens et actions (contraste 7,6:1 sur blanc) */
+    --gradient-blue: #2b6cb0;     /* Bleu du milieu du dégradé (texte blanc lisible : 5,3:1) */
+    --gradient-orange: #d99a74;   /* Terracotta doux de fin du dégradé : jamais sous du texte */
     --ai-green: #38a169;          /* Confirmation « Copié ! » des citations */
 
     /* Blue-gray neutrals for text and surfaces */
@@ -189,6 +194,18 @@ main > section:not(.hero):nth-of-type(odd) {
     text-decoration: none;
 }
 
+/* Logo « CY » en dégradé, comme le favicon : C bleu, Y terracotta (navigateurs récents ;
+   les autres gardent le bleu marine ci-dessus) */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .nav-logo a {
+        display: inline-block;
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--gradient-blue) 45%, var(--gradient-orange) 85%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+}
+
 .nav-menu {
     display: flex;
     list-style: none;
@@ -217,7 +234,7 @@ main > section:not(.hero):nth-of-type(odd) {
     left: 0;
     width: 0;
     height: 2px;
-    background: var(--secondary-color);
+    background: linear-gradient(90deg, var(--gradient-blue), var(--gradient-orange));
     transition: var(--transition);
 }
 
@@ -249,8 +266,22 @@ main > section:not(.hero):nth-of-type(odd) {
 .hero {
     /* En haut : la hauteur de la barre de menu fixe, plus l'espace au-dessus du nom */
     padding: calc(var(--nav-height) + clamp(1.75rem, 3.5vw, 2.75rem)) 0 clamp(1.75rem, 3.5vw, 2.75rem);
-    background: var(--primary-color);
+    /* Téléphone et tablette : le texte occupe toute la largeur, l'orange n'est qu'un halo
+       dans le coin inférieur droit, sous les liens, pour que tout le texte reste sur le bleu. */
+    background:
+        radial-gradient(circle at 100% 100%, rgba(217, 154, 116, 0.9) 0, rgba(217, 154, 116, 0) 30%),
+        linear-gradient(115deg, var(--primary-color) 0%, #22497a 55%, var(--gradient-blue) 100%);
+    background-color: var(--primary-color);
     color: var(--text-white);
+}
+
+/* Grand écran : dégradé bleu marine → bleu → orange. Le texte, à gauche, reste sur le bleu ;
+   l'orange arrive derrière et à droite du monogramme (ou de la photo). */
+@media (width > 1020px) {
+    .hero {
+        background: linear-gradient(100deg, var(--primary-color) 0%, var(--gradient-blue) 55%, var(--gradient-orange) 100%);
+        background-color: var(--primary-color);
+    }
 }
 
 /* Photo (ou monogramme provisoire) : affichée seulement sur grand écran */
